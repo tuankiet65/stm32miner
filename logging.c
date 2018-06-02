@@ -1,7 +1,8 @@
 #include "logging.h"
 
+#ifdef DEBUG
+
 const char* LEVEL_LABEL[] = {
-	"DEBUG  ",
 	"INFO   ",
 	"WARNING",
 	"FATAL  "
@@ -41,3 +42,5 @@ void LOG(unsigned char level, const char msg[], ...) {
 		usart_send_blocking(USART1, result[i]);
 	}
 }
+
+#endif

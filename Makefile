@@ -3,7 +3,7 @@ DEVICE          = stm32f030f4p6
 OPENCM3_DIR     = ./libopencm3
 OBJS            = main.o sha256.o logging.o mini_printf.o clock.o
 
-COMMON          += -Wall -Wextra -pedantic -flto -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax 
+COMMON          += -Wall -Wextra -Werror -pedantic -flto -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax 
 CFLAGS          += -Os $(COMMON)
 CPPFLAGS        += -MD $(COMMON)
 LDFLAGS         += -static -nostartfiles $(COMMON)
@@ -17,6 +17,11 @@ ifneq ($(V),1)
 Q := @
 # Do not print "Entering directory ...".
 MAKEFLAGS += --no-print-directory
+endif
+
+# Debug/production build
+ifneq ($(PRODUCTION),1)
+CFLAGS += -DDEBUG
 endif
 
 .PHONY: clean all lib upload size

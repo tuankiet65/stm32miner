@@ -10,10 +10,15 @@
 
 	#include "mini_printf.h"
 
-	#define INFO 1
-	#define WARNING 2
-	#define FATAL 3
+	#define INFO 0
+	#define WARNING 1
+	#define FATAL 2
 
-	void log_init();
-	void LOG(unsigned char level, const char msg[], ...);
+	#ifdef DEBUG
+		void log_init();
+		void LOG(unsigned char level, const char msg[], ...);
+	#else
+		#define log_init() ;
+		#define LOG(...) ;
+	#endif
 #endif
