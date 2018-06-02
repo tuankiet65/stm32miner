@@ -85,3 +85,4 @@ dkms.conf
 *.app
 
 *.ld
+test

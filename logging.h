@@ -10,7 +10,6 @@
 
 	#include "mini_printf.h"
 
-	#define DEBUG 0
 	#define INFO 1
 	#define WARNING 2
 	#define FATAL 3

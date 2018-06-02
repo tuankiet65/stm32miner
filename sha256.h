@@ -4,6 +4,8 @@
     #include <string.h>
     #include <inttypes.h>
 
+    #include "logging.h"
+    
     /* Elementary functions used by SHA256 */
     #define Ch(x, y, z)     ((x & (y ^ z)) ^ z)
     #define Maj(x, y, z)    ((x & (y | z)) | (y & z))
@@ -35,15 +37,7 @@
 
     void sha256_init(uint32_t *state);
     void sha256_transform(uint32_t *state, const uint32_t *block);
-    void sha256d_80_swap(uint32_t *hash, const uint32_t *data);
-    void sha256d(unsigned char *hash, const unsigned char *data, int len);
-    void sha256d_preextend(uint32_t *W);
-    void sha256d_prehash(uint32_t *S, const uint32_t *W);
-    void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midstate, const uint32_t *prehash);
 
-    struct work {
-        uint32_t data[48];
-        uint32_t target[8];
-    };
+    uint32_t scanhash_sha256d(const uint32_t header[], uint32_t *result);
 
 #endif
