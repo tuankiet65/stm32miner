@@ -9,10 +9,11 @@ const char* LEVEL_LABEL[] = {
 };
 
 void log_init() {
+	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_USART1);
 
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, (GPIO9 | GPIO10));
-	gpio_set_af(GPIOA, GPIO_AF1, (GPIO9 | GPIO10));
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, (GPIO2 | GPIO3));
+	gpio_set_af(GPIOA, GPIO_AF1, (GPIO2 | GPIO3));
 
 	usart_disable(USART1);
 
