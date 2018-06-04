@@ -7,8 +7,10 @@ static unsigned i2c_register_size;
 
 static unsigned char i2c_register[256];
 
-static void (*read_callback)();
-static void (*write_callback)();
+static void (*read_callback)() = NULL;
+static void (*write_callback)() = NULL;
+static const struct i2c_variable *i2c_variables;
+static int i2c_variables_len;
 
 void i2c_init_peripheral(unsigned char addr) {
     rcc_periph_clock_enable(RCC_GPIOA);
@@ -43,6 +45,8 @@ void i2c_init_peripheral(unsigned char addr) {
 }
 
 void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
+    i2c_variables = variables;
+    i2c_variables_len = len;
     for (int i = 0; i < len; ++i) {
         for (int i2 = 0; i2 < variables[i].size; ++i2) {
             i2c_register_rw[i2c_register_size] = variables[i].rw;
@@ -60,8 +64,8 @@ void i2c_init(unsigned char addr, const struct i2c_variable variables[], const i
     i2c_init_rw_map(variables, len);
 }
 
-bool i2c_ready(uint32_t i2c) {
-    return !i2c_busy(i2c);
+bool i2c_ready() {
+    return !i2c_busy(I2C1);
 }
 
 void i2c_register_read_callback(void (*callback)()) {
@@ -128,12 +132,6 @@ void i2c1_isr() {
         return;
     }
     
-    if (i2c_interrupt_stop(I2C1)) {
-        LOG(INFO, "I2C: Slave received STOP");
-        i2c_clear_stop(I2C1);
-        return;
-    } 
-    
     if (i2c_interrupt_read_not_empty(I2C1)) {
         if (i2c_ptr == 0xffffffff) {
             i2c_ptr = i2c_get_data(I2C1);
@@ -176,12 +174,71 @@ void i2c1_isr() {
         i2c_ptr++;
     }
 
+    if (i2c_interrupt_stop(I2C1)) {
+        LOG(INFO, "I2C: Slave received STOP");
+        i2c_clear_stop(I2C1);
+        if (i2c_is_read(I2C1)) {
+            LOG(INFO, "I2C: Calling read interrupt");
+            if (read_callback) read_callback();
+        } else {
+            LOG(INFO, "I2C: Calling write interrupt");
+            if (write_callback) write_callback();
+        }
+        return;
+    }
+
     return;
 }
 
 void i2c_dump() {
+    const char h2d[16] = "0123456789abcdef";
+    int ptr = 0;
     LOG(INFO, "I2C: Data dump");
-    for (unsigned i = 0; i < i2c_register_size; i += 4) {
-        LOG(INFO, "I2C: 0x%02x: 0x%08x", i, i2c_register[i]);
+    for (int i = 0; i < i2c_variables_len; ++i) {
+        LOG(INFO, "%s:", i2c_variables[i].id);
+        
+        char hexdump[512];
+        memset(hexdump, 0, sizeof(hexdump));
+
+        for (int i2 = 0; i2 < i2c_variables[i].size; i2++, ptr++) {
+            hexdump[3*(i2%16)]   = h2d[i2c_register[ptr] / 16];
+            hexdump[3*(i2%16)+1] = h2d[i2c_register[ptr] % 16];
+            hexdump[3*(i2%16)+2] = ' ';
+
+            if (i2 % 16 == 0 && i2 != 0) {
+                LOG(INFO, "    %s", hexdump);
+                memset(hexdump, 0, sizeof(hexdump));
+            }
+        }
+        
+        if (hexdump[0] != '\0') LOG(INFO, "    %s", hexdump);
     }
+}
+
+bool i2c_read(char variable_id[], void *buf) {
+    int ptr = 0;
+    for (int i = 0; i < i2c_variables_len; ++i) {
+        if (strcmp(i2c_variables[i].id, variable_id) == 0) {
+            memcpy(buf, i2c_register + ptr, i2c_variables[i].size);
+            return true;
+        } else {
+            ptr += i2c_variables[i].size;
+        }
+    }
+
+    return false;
+}
+
+bool i2c_write(char variable_id[], void *buf) {
+    int ptr = 0;
+    for (int i = 0; i < i2c_variables_len; ++i) {
+        if (strcmp(i2c_variables[i].id, variable_id) == 0) {
+            memcpy(i2c_register + ptr, buf, i2c_variables[i].size);
+            return true;
+        } else {
+            ptr += i2c_variables[i].size;
+        }
+    }
+
+    return false;
 }

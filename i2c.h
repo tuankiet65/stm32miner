@@ -24,8 +24,11 @@
 
     void i2c_init(unsigned char addr, const struct i2c_variable variables[], const int len);
 
-    bool i2c_ready(uint32_t i2c);
-    
+    bool i2c_ready();
+
+    bool i2c_read(char variable_id[], void *buf);
+    bool i2c_write(char variable_id[], void *buf);
+
     void i2c_register_read_callback(void (*read_callback)());
     void i2c_register_write_callback(void (*write_callback)());
     

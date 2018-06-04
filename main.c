@@ -72,7 +72,8 @@ int main() {
     gpio_setup();
     log_init();
     i2c_init(0x69, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
-
+    i2c_register_write_callback(i2c_dump);
+    
     uint32_t result;
     LOG(INFO, "I2C loop begin");
     while (1);
