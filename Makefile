@@ -1,11 +1,23 @@
+#  Makefile
+#  Copyright (C) 2018 Ho Tuan Kiet
+#  
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
 TARGETS         = stm32/f0
 DEVICE          = stm32f030f4p6
 OPENCM3_DIR     = ./libopencm3
 OBJS            = main.o sha256.o logging.o mini_printf.o clock.o
-
-COMMON          += -Wall -Wextra -Werror -pedantic -flto -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax 
-CFLAGS          += -Os $(COMMON)
-CPPFLAGS        += -MD $(COMMON)
+COMMON          += -Wall -Wextra -flto -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax 
+CFLAGS          += -Os -std=gnu11 $(COMMON)
+CPPFLAGS        += -MD -std=gnu++17 $(COMMON)
 LDFLAGS         += -static -nostartfiles $(COMMON)
 LDLIBS          += -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
