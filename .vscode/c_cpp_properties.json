@@ -12,7 +12,7 @@
                 "${workspaceFolder}/*",
                 "${workspaceFolder}/libopencm3/include/**"
             ],
-            "defines": ["STM32F0", "STM32F030F4P6"],
+            "defines": ["STM32F0", "STM32F030F4P6", "DEBUG"],
             "compilerPath": "/bin/arm-none-eabi-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
