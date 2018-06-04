@@ -1,0 +1,22 @@
+build:
+    image: base/archlinux
+    retry: 2
+    variables:
+        GIT_STRATEGY: fetch
+        GIT_SUBMODULE_STRATEGY: normal
+
+    before_script:
+        - pacman -Syu --noconfirm
+        - pacman -S --noconfirm base-devel
+        - pacman -S arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib
+        - arm-none-eabi-gcc -v
+    script:
+        - make lib
+        - make binary.hex size
+    
+    artifacts:
+        name: "stm32miner-$CI_COMMIT_SHA"
+        paths:
+            - binary.elf
+            - binary.hex
+
