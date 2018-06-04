@@ -16,13 +16,13 @@
         I2C_READ_WRITE
     };
 
-    struct i2c_region {
+    struct i2c_variable {
         char *id;
         int size;
         enum i2c_rw_status rw;
     };
 
-    void i2c_init(unsigned char addr, const struct i2c_region regions[], const int len);
+    void i2c_init(unsigned char addr, const struct i2c_variable variables[], const int len);
 
     bool i2c_ready(uint32_t i2c);
     

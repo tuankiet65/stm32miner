@@ -27,37 +27,37 @@ void i2c_init_peripheral(unsigned char addr) {
 
     i2c_enable_analog_filter(I2C1);
     i2c_enable_stretching(I2C1);
-    i2c_set_speed(I2C1, i2c_speed_sm_100k, 48);
+    i2c_set_speed(I2C1, i2c_speed_fm_400k, 48);
 
     i2c_set_own_7bit_slave_address(I2C1, addr);
     // libopencm3 for some freaky reasons doesn't provide
     // any functions to enable OAR1 address, nor the
     // i2c_set_own_7bit_slave_address does that, so we'll
-    // have to enable it on our own.
+    // have to do it on our own.
     // Time wasted debugging and swearing: 2 days
     I2C_OAR1(I2C1) |= I2C_OAR1_OA1EN_ENABLE;
 
-    i2c_enable_interrupt(I2C1, I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_DDRIE | I2C_CR1_TCIE | I2C_CR1_ERRIE);
+    i2c_enable_interrupt(I2C1, I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_DDRIE | I2C_CR1_NACKIE | I2C_CR1_STOPIE);
 
     i2c_peripheral_enable(I2C1);
 }
 
-void i2c_init_rw_map(const struct i2c_region regions[], const int len) {
+void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
     for (int i = 0; i < len; ++i) {
-        for (int i2 = 0; i2 < regions[i].size; ++i2) {
-            i2c_register_rw[i2c_register_size] = regions[i].rw;
+        for (int i2 = 0; i2 < variables[i].size; ++i2) {
+            i2c_register_rw[i2c_register_size] = variables[i].rw;
             i2c_register_size++;
             if (i2c_register_size >= sizeof(i2c_register_rw)) {
-                LOG(INFO, "I2C: Register size overflow");
+                LOG(INFO, "I2C: Register size overflow, bailing");
                 return;
             }
         }
     }
 }
 
-void i2c_init(unsigned char addr, const struct i2c_region regions[], const int len) {
+void i2c_init(unsigned char addr, const struct i2c_variable variables[], const int len) {
     i2c_init_peripheral(addr);
-    i2c_init_rw_map(regions, len);
+    i2c_init_rw_map(variables, len);
 }
 
 bool i2c_ready(uint32_t i2c) {
@@ -150,6 +150,7 @@ void i2c1_isr() {
 
         if (i2c_register_rw[i2c_ptr] != I2C_READ_WRITE) {
             LOG(INFO, "I2C: Writing into non-writable area (addr: 0x%02x), ignoring", i2c_ptr);
+            i2c_ptr++;
             i2c_get_data(I2C1);
             return;
         }
@@ -163,7 +164,10 @@ void i2c1_isr() {
     if (i2c_interrupt_write_empty(I2C1)) {
         if (i2c_ptr >= i2c_register_size) {
             LOG(INFO, "I2C: Read pointer overflow, writing garbage");
-            i2c_send_data(I2C1, 0b01100101);
+            // Slave is writing out data
+            // As there's no way for the slave to terminate read
+            // transaction, we'll just have to send garbage
+            i2c_send_data(I2C1, 0xff);
             return;
         }
 

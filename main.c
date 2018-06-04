@@ -54,23 +54,24 @@ static const uint32_t header[32] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000280  //
 };
 
-const struct i2c_region regions[] = {
-    { .id = "new_job_id"    , .size = sizeof(uint32_t)    , .rw = I2C_READ_WRITE },
-    { .id = "new_header"    , .size = sizeof(uint32_t[20]), .rw = I2C_READ_WRITE },
-    { .id = "execute"       , .size = sizeof(uint32_t)    , .rw = I2C_READ_WRITE },
+const struct i2c_variable i2c_variables[] = {
+    { .id = "new_job_id"     , .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
+    { .id = "new_header"     , .size = sizeof(uint32_t[20]) , .rw = I2C_READ_WRITE },
+    { .id = "execute_job"    , .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
+    { .id = "force_calibrate", .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
 
-    { .id = "version"       , .size = sizeof(uint32_t)    , .rw = I2C_READ },
-    { .id = "hashrate"      , .size = sizeof(uint32_t)    , .rw = I2C_READ },
-    { .id = "current_job_id", .size = sizeof(uint32_t)    , .rw = I2C_READ },
-    { .id = "finished"      , .size = sizeof(uint32_t)    , .rw = I2C_READ },
-    { .id = "winning_nonce" , .size = sizeof(uint32_t)    , .rw = I2C_READ }
+    { .id = "version"        , .size = sizeof(uint32_t)     , .rw = I2C_READ },
+    { .id = "hashrate"       , .size = sizeof(uint32_t)     , .rw = I2C_READ },
+    { .id = "current_job_id" , .size = sizeof(unsigned char), .rw = I2C_READ },
+    { .id = "finished"       , .size = sizeof(unsigned char), .rw = I2C_READ },
+    { .id = "winning_nonce"  , .size = sizeof(uint32_t)     , .rw = I2C_READ },
 };
 
 int main() {
     rcc_clock_setup_in_hsi_out_64mhz();
     gpio_setup();
     log_init();
-    i2c_init(0x69, regions, sizeof(regions) / sizeof(struct i2c_region));
+    i2c_init(0x69, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
 
     uint32_t result;
     LOG(INFO, "I2C loop begin");
