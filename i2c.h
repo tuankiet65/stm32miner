@@ -22,10 +22,10 @@
         enum i2c_rw_status rw;
     };
 
-    void i2c_init(int addr, const struct i2c_region regions[], const int len);
+    void i2c_init(unsigned char addr, const struct i2c_region regions[], const int len);
 
     bool i2c_ready(uint32_t i2c);
-
+    
     void i2c_register_read_callback(void (*read_callback)());
     void i2c_register_write_callback(void (*write_callback)());
     

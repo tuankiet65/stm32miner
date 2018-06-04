@@ -10,7 +10,7 @@ static unsigned char i2c_register[256];
 static void (*read_callback)();
 static void (*write_callback)();
 
-void i2c_init_peripheral(int addr) {
+void i2c_init_peripheral(unsigned char addr) {
     rcc_periph_clock_enable(RCC_GPIOA);
 
     // Enable I2C1 clock
@@ -55,7 +55,7 @@ void i2c_init_rw_map(const struct i2c_region regions[], const int len) {
     }
 }
 
-void i2c_init(int addr, const struct i2c_region regions[], const int len) {
+void i2c_init(unsigned char addr, const struct i2c_region regions[], const int len) {
     i2c_init_peripheral(addr);
     i2c_init_rw_map(regions, len);
 }
