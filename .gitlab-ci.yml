@@ -1,23 +1,41 @@
-build:
-    image: base/archlinux
-    retry: 1
-    variables:
-        GIT_STRATEGY: fetch
-        GIT_SUBMODULE_STRATEGY: normal
+image: base/archlinux
+variables:
+    GIT_STRATEGY: fetch
+    GIT_SUBMODULE_STRATEGY: normal
+before_script:
+    - pacman -Syu --noconfirm
+    - pacman -S --noconfirm make
+    - pacman -S --noconfirm arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib
+    - pacman -S --noconfirm python
+    - arm-none-eabi-gcc -v
 
-    before_script:
-        - pacman -Syu --noconfirm
-        - pacman -S --noconfirm make
-        - pacman -S --noconfirm arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib
-        - pacman -S --noconfirm python
-        - arm-none-eabi-gcc -v
+stages:
+    - build
+
+debug-build:
+    stage: build
+    retry: 1
+
     script:
         - make lib
         - make binary.hex size
-    
+
     artifacts:
-        name: "stm32miner-$CI_COMMIT_SHA"
+        name: "stm32miner-debug-$CI_COMMIT_SHA"
         paths:
             - binary.elf
             - binary.hex
 
+production-build:
+    stage: build
+    retry: 1
+
+    script:
+        - make lib
+        - make PRODUCTION=1 binary.hex size
+    
+    artifacts:
+        name: "stm32miner-production-$CI_COMMIT_SHA"
+        paths:
+            - binary.elf
+            - binary.hex
