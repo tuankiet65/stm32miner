@@ -14,7 +14,7 @@
 TARGETS         = stm32/f0
 DEVICE          = stm32f030f4p6
 OPENCM3_DIR     = ./libopencm3
-OBJS            = main.o sha256.o logging.o mini_printf.o clock.o i2c/i2c_interrupt.o
+OBJS            = main.o sha256.o logging.o mini_printf.o clock.o i2c.o
 
 COMMON          += -Wall -Wextra -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax 
 CFLAGS          += -Os -std=gnu11 $(COMMON)

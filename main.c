@@ -18,6 +18,7 @@
 
 #include <libopencm3/stm32/gpio.h>
 
+#include "i2c.h"
 #include "clock.h"
 #include "sha256.h"
 #include "logging.h"
@@ -46,20 +47,34 @@ static const uint32_t header[32] = {
     
     0x858b0318, // Bits
 
-    0xc67e0000, // starting nonce
+    0x00000000, // starting nonce
     
     0x80000000, 0x00000000, 0x00000000, 0x00000000, //
     0x00000000, 0x00000000, 0x00000000, 0x00000000, // SHA-256 padding
     0x00000000, 0x00000000, 0x00000000, 0x00000280  //
 };
 
+const struct i2c_region regions[] = {
+    { .id = "new_job_id"    , .size = sizeof(uint32_t)    , .rw = I2C_READ_WRITE },
+    { .id = "new_header"    , .size = sizeof(uint32_t[20]), .rw = I2C_READ_WRITE },
+    { .id = "execute"       , .size = sizeof(uint32_t)    , .rw = I2C_READ_WRITE },
+
+    { .id = "version"       , .size = sizeof(uint32_t)    , .rw = I2C_READ },
+    { .id = "hashrate"      , .size = sizeof(uint32_t)    , .rw = I2C_READ },
+    { .id = "current_job_id", .size = sizeof(uint32_t)    , .rw = I2C_READ },
+    { .id = "finished"      , .size = sizeof(uint32_t)    , .rw = I2C_READ },
+    { .id = "winning_nonce" , .size = sizeof(uint32_t)    , .rw = I2C_READ }
+};
+
 int main() {
     rcc_clock_setup_in_hsi_out_64mhz();
     gpio_setup();
     log_init();
+    i2c_init(0x69, regions, sizeof(regions) / sizeof(struct i2c_region));
 
     uint32_t result;
-    scanhash_sha256d(header, &result);
+    LOG(INFO, "I2C loop begin");
+    while (1);
 
     return 0;
 }
