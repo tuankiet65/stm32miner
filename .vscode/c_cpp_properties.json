@@ -9,10 +9,10 @@
                 "limitSymbolsToIncludedHeaders": true
             },
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/libopencm3/"
+                "${workspaceFolder}/*",
+                "${workspaceFolder}/libopencm3/include/**"
             ],
-            "defines": [],
+            "defines": ["STM32F0", "STM32F030F4P6"],
             "compilerPath": "/bin/arm-none-eabi-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
