@@ -1,6 +1,6 @@
 build:
     image: base/archlinux
-    retry: 2
+    retry: 1
     variables:
         GIT_STRATEGY: fetch
         GIT_SUBMODULE_STRATEGY: normal
@@ -8,7 +8,7 @@ build:
     before_script:
         - pacman -Syu --noconfirm
         - pacman -S --noconfirm base-devel
-        - pacman -S arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib
+        - pacman -S --noconfirm arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib
         - arm-none-eabi-gcc -v
     script:
         - make lib
