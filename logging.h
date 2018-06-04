@@ -25,13 +25,15 @@
 
 	#include "mini_printf.h"
 
-	#define INFO 0
-	#define WARNING 1
-	#define FATAL 2
+	enum log_level {
+		INFO = 0,
+		WARNING = 1,
+		FATAL = 2
+	};
 
 	#ifdef DEBUG
 		void log_init();
-		void LOG(unsigned char level, const char msg[], ...);
+		void LOG(enum log_level level, const char msg[], ...);
 	#else
 		#define log_init() ;
 		#define LOG(...) ;

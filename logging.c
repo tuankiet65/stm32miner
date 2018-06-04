@@ -42,9 +42,7 @@ void log_init() {
 	usart_enable(USART1);
 }
 
-void LOG(unsigned char level, const char msg[], ...) {
-	if (level > 3) return;
-
+void LOG(enum log_level level, const char msg[], ...) {
 	char fmt[256], result[1024];
 
 	mini_snprintf(fmt, sizeof(fmt), "[ %s ] %s\n", LEVEL_LABEL[level], msg);
