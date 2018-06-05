@@ -26,8 +26,8 @@
 
     bool i2c_ready();
 
-    bool i2c_read(char variable_id[], void *buf);
-    bool i2c_write(char variable_id[], void *buf);
+    bool i2c_read(char variable_id[], volatile void *buf);
+    bool i2c_write(char variable_id[], volatile void *buf);
 
     void i2c_register_read_callback(void (*read_callback)());
     void i2c_register_write_callback(void (*write_callback)());

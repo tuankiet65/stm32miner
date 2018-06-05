@@ -1,14 +1,15 @@
 #include "i2c.h"
 
-static unsigned i2c_ptr = 0xffffffff;
+static volatile unsigned i2c_ptr = 0xffffffff;
 
 static enum i2c_rw_status i2c_register_rw[256];
 static unsigned i2c_register_size;
 
-static unsigned char i2c_register[256];
+static volatile unsigned char i2c_register[256];
 
 static void (*read_callback)() = NULL;
 static void (*write_callback)() = NULL;
+
 static const struct i2c_variable *i2c_variables;
 static int i2c_variables_len;
 
@@ -102,6 +103,14 @@ bool i2c_is_read(uint32_t i2c) {
 
 void i2c_clear_addr_match(uint32_t i2c) {
     I2C_ICR(i2c) |= I2C_ICR_ADDRCF;
+}
+
+static void memcpy_volatile(volatile void *dst, volatile void *src, size_t len) {
+    volatile unsigned char *dst_uc = dst, *src_uc = src;
+
+    for (size_t i = 0; i < len; ++i) {
+        dst_uc[i] = src_uc[i];
+    }
 }
 
 void i2c_clear_nack(uint32_t i2c) {
@@ -215,11 +224,11 @@ void i2c_dump() {
     }
 }
 
-bool i2c_read(char variable_id[], void *buf) {
+bool i2c_read(char variable_id[], volatile void *buf) {
     int ptr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
         if (strcmp(i2c_variables[i].id, variable_id) == 0) {
-            memcpy(buf, i2c_register + ptr, i2c_variables[i].size);
+            memcpy_volatile(buf, i2c_register + ptr, i2c_variables[i].size);
             return true;
         } else {
             ptr += i2c_variables[i].size;
@@ -229,11 +238,11 @@ bool i2c_read(char variable_id[], void *buf) {
     return false;
 }
 
-bool i2c_write(char variable_id[], void *buf) {
+bool i2c_write(char variable_id[], volatile void *buf) {
     int ptr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
         if (strcmp(i2c_variables[i].id, variable_id) == 0) {
-            memcpy(i2c_register + ptr, buf, i2c_variables[i].size);
+            memcpy_volatile(i2c_register + ptr, buf, i2c_variables[i].size);
             return true;
         } else {
             ptr += i2c_variables[i].size;
