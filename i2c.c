@@ -105,8 +105,9 @@ void i2c_clear_addr_match(uint32_t i2c) {
     I2C_ICR(i2c) |= I2C_ICR_ADDRCF;
 }
 
-static void memcpy_volatile(volatile void *dst, volatile void *src, size_t len) {
-    volatile unsigned char *dst_uc = dst, *src_uc = src;
+static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t len) {
+    volatile unsigned char *dst_uc = dst;
+    volatile const unsigned char *src_uc = src;
 
     for (size_t i = 0; i < len; ++i) {
         dst_uc[i] = src_uc[i];
@@ -240,7 +241,7 @@ bool i2c_read(char variable_id[], volatile void *buf) {
     return false;
 }
 
-bool i2c_write(char variable_id[], volatile void *buf) {
+bool i2c_write(char variable_id[], volatile const void *buf) {
     int ptr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
         if (strcmp(i2c_variables[i].id, variable_id) == 0) {
