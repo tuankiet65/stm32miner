@@ -38,6 +38,6 @@
     void sha256_init(uint32_t *state);
     void sha256_transform(uint32_t *state, const uint32_t *block);
 
-    uint32_t scanhash_sha256d(const uint32_t header[], uint32_t *result);
+    uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result, volatile unsigned char *new_data);
 
 #endif

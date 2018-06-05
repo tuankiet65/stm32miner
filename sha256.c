@@ -316,7 +316,7 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 	         + sha256_h[7];
 }
 
-uint32_t scanhash_sha256d(const uint32_t header[], uint32_t *result) {
+uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result, volatile unsigned char *new_data) {
 	uint32_t data[64];
 	uint32_t hash[8];
 	uint32_t midstate[8];
@@ -331,17 +331,17 @@ uint32_t scanhash_sha256d(const uint32_t header[], uint32_t *result) {
 	sha256d_prehash(prehash, header + 16);
 	
 	do {
-		data[3]++;
 		sha256d_ms(hash, data, midstate, prehash);
 		if (hash[7] == 0x00000000) {
 			LOG(INFO, "winning nonce: 0x%08x", __builtin_bswap32(data[3]));
 			*result = data[3];
             return 1;
         }
-		if (data[3] % 0xfff == 0) {
+		if (data[3] % 0x1000 == 0) {
 			LOG(INFO, "nonce: 0x%08x, first byte: 0x%08x", __builtin_bswap32(data[3]), hash[7]);
 		}
-	} while (1);
+		data[3]++;
+	} while (*new_data == 0);
 
 	return 0;
 }
