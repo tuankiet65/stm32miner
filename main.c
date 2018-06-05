@@ -23,6 +23,10 @@
 #include "sha256.h"
 #include "logging.h"
 
+#ifndef GIT_VERSION
+    #define GIT_VERSION "unknown"
+#endif
+
 #define PORT_LED GPIOA
 #define PIN_LED GPIO4
 
@@ -34,7 +38,7 @@ static void gpio_setup(void) {
 // Header of block #443888
 // Hash: 0000000000000000000cdc0d2a9b33c2d4b34b4d4fa8920f074338d0dc1164dc
 // Winning nonce: 0x2e597ec6
-static const uint32_t header[32] = {
+static uint32_t header[32] = {
     0x02000020, // Version
     
     0x14c2a9b7, 0x5c44c656, 0xd5720f69, 0x4c32d97a, // Previous block hash
@@ -60,7 +64,7 @@ const struct i2c_variable i2c_variables[] = {
     { .id = "execute_job"    , .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
     { .id = "force_calibrate", .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
 
-    { .id = "version"        , .size = sizeof(uint32_t)     , .rw = I2C_READ },
+    { .id = "version"        , .size = sizeof(char[8])      , .rw = I2C_READ },
     { .id = "hashrate"       , .size = sizeof(uint32_t)     , .rw = I2C_READ },
     { .id = "current_job_id" , .size = sizeof(unsigned char), .rw = I2C_READ },
     { .id = "finished"       , .size = sizeof(unsigned char), .rw = I2C_READ },
@@ -73,9 +77,10 @@ int main() {
     log_init();
     i2c_init(0x69, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
     i2c_register_write_callback(i2c_dump);
-    
+
     uint32_t result;
     LOG(INFO, "I2C loop begin");
+    i2c_write("version", GIT_VERSION);
     while (1);
 
     return 0;
