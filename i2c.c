@@ -214,13 +214,15 @@ void i2c_dump() {
             hexdump[3*(i2%16)+1] = h2d[i2c_register[ptr] % 16];
             hexdump[3*(i2%16)+2] = ' ';
 
-            if (i2 % 16 == 0 && i2 != 0) {
+            if (i2 % 16 == 15) {
                 LOG(INFO, "    %s", hexdump);
                 memset(hexdump, 0, sizeof(hexdump));
             }
         }
         
-        if (hexdump[0] != '\0') LOG(INFO, "    %s", hexdump);
+        if (hexdump[0] != '\0') {
+            LOG(INFO, "    %s", hexdump);
+        }
     }
 }
 
