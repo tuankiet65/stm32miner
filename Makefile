@@ -18,7 +18,6 @@ OBJS            = main.o sha256.o logging.o mini_printf.o clock.o i2c.o
 
 COMMON          += -Wall -Wextra -fdata-sections -ffunction-sections -flto -Wl,--gc-sections -Wl,--relax -DGIT_VERSION="\"$(GIT_SHA1)\""
 CFLAGS          += -Os -std=gnu11 $(COMMON)
-CPPFLAGS        += -MD -std=gnu++17 $(COMMON)
 LDFLAGS         += -static -nostartfiles $(COMMON)
 LDLIBS          += -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
