@@ -125,8 +125,35 @@ void i2c_write_txe(uint32_t i2c) {
 }
 
 void i2c1_isr() {
-    if (i2c_state == I2C_ADDR_MATCH && i2c_interrupt_addr_match(I2C1)) {
+    // Ok so I just want to rant for a little bit
+    // When a master wants to read from a slave, it'll:
+    //  - Generate a START condition
+    //  - Address the slave, at write mode
+    //  - Write the register location where it wants to read out
+    //  - >>>>>> Generate a Repeated START condition <<<<<<
+    //  - Address the slave, at read mode
+    //  - Slave then write out data until the master sends a NACK
+    // I emphasize the "Repeated START" part because STM32 doesn't freaking
+    // recognize Repeated START in slave mode, thus it will not generate
+    // any interurpt for this condition (there aren't any flags to enable
+    // this so you know). Thus, that messes up out simple state machine
+    // implementation, because we rely on STOP condition to transition 
+    // i2c_state from I2C_READ to I2C_ADDR_MATCH, thus any master read 
+    // operation will cause the slave to lockup.
+    // So now we'll have to manually catch that situation.
+    // To catch it
+    //  - Address match event must occured
+    //  - Last state must be I2C_READ
+    //  - Master must be requesting data (aka RW bit is READ)
+
+    if (i2c_interrupt_addr_match(I2C1) &&
+            ((i2c_state == I2C_ADDR_MATCH) ||
+                ((i2c_state == I2C_READ) && (i2c_is_read(I2C1)))
+        )) {
         LOG(INFO, "I2C: Slave selected");
+        if ((i2c_state == I2C_WRITE) && (!i2c_is_read(I2C1))) {
+            LOG(INFO, "I2C: Repeated START detected");
+        }
         if (i2c_is_read(I2C1)) {
             LOG(INFO, "I2C: Slave is transmitting");
             i2c_state = I2C_WRITE;
@@ -138,7 +165,7 @@ void i2c1_isr() {
         i2c_clear_addr_match(I2C1);
         i2c_write_txe(I2C1);
         return;
-    } 
+    }
     
     if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(I2C1)) {
         LOG(INFO, "I2C: Slave received NACK (STOP should follow)");
