@@ -151,7 +151,7 @@ void i2c1_isr() {
                 ((i2c_state == I2C_READ) && (i2c_is_read(I2C1)))
         )) {
         LOG(INFO, "I2C: Slave selected");
-        if ((i2c_state == I2C_WRITE) && (!i2c_is_read(I2C1))) {
+        if ((i2c_state == I2C_READ) && (i2c_is_read(I2C1))) {
             LOG(INFO, "I2C: Repeated START detected");
         }
         if (i2c_is_read(I2C1)) {
