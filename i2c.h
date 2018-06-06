@@ -11,9 +11,15 @@
 
     #include "logging.h"
 
-    enum i2c_rw_status {
+    enum i2c_states {
+        I2C_ADDR_MATCH,
         I2C_READ,
-        I2C_READ_WRITE
+        I2C_WRITE
+    };
+
+    enum i2c_rw_status {
+        I2C_RO,
+        I2C_RW
     };
 
     struct i2c_variable {
