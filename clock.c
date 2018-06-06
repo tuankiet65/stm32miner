@@ -16,24 +16,46 @@
 #include "clock.h"
 
 void rcc_clock_setup_in_hsi_out_64mhz(void) {
-    rcc_osc_on(RCC_HSI);
-    rcc_wait_for_osc_ready(RCC_HSI);
-    rcc_set_sysclk_source(RCC_HSI);
+    /* Procedure: 
+     *  - Enable and set HSI as system clock
+     *  - Enable flash prefetch and set flash wait state to 1
+     *  - Configure PLL clock source and multiplication factor
+     *  - Enable and set PLL as system clock
+     */
 
-    rcc_set_hpre(RCC_CFGR_HPRE_NODIV);
-    rcc_set_ppre(RCC_CFGR_PPRE_NODIV);
+    // Turn HSI clock on
+    RCC_CR |= RCC_CR_HSION;
+    // Wait for HSI to be ready
+    while (!(RCC_CR & RCC_CR_HSIRDY));
+    // Set HSI as SYSCLK
+    RCC_CFGR = (RCC_CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
 
-    flash_prefetch_enable();
-    flash_set_ws(FLASH_ACR_LATENCY_024_048MHZ);
+    // Enable flash prefetch and set wait state to 1
+    // (because we're running at 64MHz)
+    FLASH_ACR = (FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY_1WS);
 
-    /* 8MHz * 16 / 2 = 64MHz */
-    rcc_set_pll_multiplication_factor(RCC_CFGR_PLLMUL_MUL16);
-    rcc_set_pll_source(RCC_CFGR_PLLSRC_HSI_CLK_DIV2);
+    // Now we set PLL parameters
+    // First we set multiplication factor to 16
+    RCC_CFGR = (RCC_CFGR & ~RCC_CFGR_PLLMUL) | RCC_CFGR_PLLMUL_MUL16;
+    // Then we set PLL source to (HSI / 2)
+    RCC_CFGR |= RCC_CFGR_PLLSRC_HSI_CLK_DIV2;
+    // PLL clock rate is: HSI 8MHz /2 * 16 = 64MHz
+    // Granted, this is much higher than the maximum allowed
+    // clock rate of the STM32F030F4P6 (48MHz), but I have yet to
+    // see any kind of instabilities, so let it be like that
 
-    rcc_osc_on(RCC_PLL);
-    rcc_wait_for_osc_ready(RCC_PLL);
-    rcc_set_sysclk_source(RCC_PLL);
+    // Now we turn PLL on
+    RCC_CR |= RCC_CR_PLLON;
+    // Wait for PLL to be ready
+    while (!(RCC_CR & RCC_CR_PLLRDY));
+    // Then we set PLL as SYSCLK
+    RCC_CFGR = (RCC_CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
 
+    // Finally, set APB1 and AHB frequency
+    // Set HCLK and PCLK divisor to 1 (aka SYSCLK and APB clock == PLL clock)
+    RCC_CFGR = (RCC_CFGR & (~RCC_CFGR_HPRE)) | RCC_CFGR_HPRE_NODIV;
+    RCC_CFGR = (RCC_CFGR & (~RCC_CFGR_PPRE)) | RCC_CFGR_PPRE_NODIV;
+    // Set global APH1/AHB frequency to 65MHz
     rcc_apb1_frequency = 8000000 * 16 / 2;
     rcc_ahb_frequency = rcc_apb1_frequency;
 }
