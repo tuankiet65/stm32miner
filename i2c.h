@@ -35,5 +35,9 @@
     // Interrupt handler
     void i2c1_isr();
 
-    void i2c_dump();
+    #ifdef DEBUG
+        void i2c_dump();
+    #else
+        #define i2c_dump() ;
+    #endif
 #endif

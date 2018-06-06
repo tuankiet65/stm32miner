@@ -200,32 +200,34 @@ void i2c1_isr() {
     return;
 }
 
-void i2c_dump() {
-    const char h2d[16] = "0123456789abcdef";
-    int ptr = 0;
-    LOG(INFO, "I2C: Data dump");
-    for (int i = 0; i < i2c_variables_len; ++i) {
-        LOG(INFO, "%s:", i2c_variables[i].id);
-        
-        char hexdump[512];
-        memset(hexdump, 0, sizeof(hexdump));
+#ifdef DEBUG
+    void i2c_dump() {
+        const char h2d[16] = "0123456789abcdef";
+        int ptr = 0;
+        LOG(INFO, "I2C: Data dump");
+        for (int i = 0; i < i2c_variables_len; ++i) {
+            LOG(INFO, "%s:", i2c_variables[i].id);
+            
+            char hexdump[512];
+            memset(hexdump, 0, sizeof(hexdump));
 
-        for (int i2 = 0; i2 < i2c_variables[i].size; i2++, ptr++) {
-            hexdump[3*(i2%16)]   = h2d[i2c_register[ptr] / 16];
-            hexdump[3*(i2%16)+1] = h2d[i2c_register[ptr] % 16];
-            hexdump[3*(i2%16)+2] = ' ';
+            for (int i2 = 0; i2 < i2c_variables[i].size; i2++, ptr++) {
+                hexdump[3*(i2%16)]   = h2d[i2c_register[ptr] / 16];
+                hexdump[3*(i2%16)+1] = h2d[i2c_register[ptr] % 16];
+                hexdump[3*(i2%16)+2] = ' ';
 
-            if (i2 % 16 == 15) {
+                if (i2 % 16 == 15) {
+                    LOG(INFO, "    %s", hexdump);
+                    memset(hexdump, 0, sizeof(hexdump));
+                }
+            }
+            
+            if (hexdump[0] != '\0') {
                 LOG(INFO, "    %s", hexdump);
-                memset(hexdump, 0, sizeof(hexdump));
             }
         }
-        
-        if (hexdump[0] != '\0') {
-            LOG(INFO, "    %s", hexdump);
-        }
     }
-}
+#endif
 
 bool i2c_read(char variable_id[], volatile void *buf) {
     int ptr = 0;
