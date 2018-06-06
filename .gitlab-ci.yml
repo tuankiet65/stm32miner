@@ -4,7 +4,7 @@ variables:
     GIT_SUBMODULE_STRATEGY: normal
 before_script:
     - pacman -Syu --noconfirm
-    - pacman -S --noconfirm make
+    - pacman -S --noconfirm make git
     - pacman -S --noconfirm arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-newlib
     - pacman -S --noconfirm python
     - arm-none-eabi-gcc -v
