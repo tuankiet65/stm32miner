@@ -66,17 +66,30 @@ uint32_t sha256_padding[20] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000280 
 };
 
-struct i2c_variable i2c_variables[] = {
-    { .id = "new_job_id"     , .size = sizeof(unsigned char), .rw = I2C_RW },
-    { .id = "new_header"     , .size = sizeof(uint32_t[20]) , .rw = I2C_RW },
-    { .id = "execute_job"    , .size = sizeof(unsigned char), .rw = I2C_RW },
-    { .id = "force_calibrate", .size = sizeof(unsigned char), .rw = I2C_RW },
+enum i2c_variable_ids {
+    new_job_id,
+    new_header,
+    execute_job,
+    force_calibrate,
 
-    { .id = "version"        , .size = sizeof(char[8])      , .rw = I2C_RO },
-    { .id = "hashrate"       , .size = sizeof(uint32_t)     , .rw = I2C_RO },
-    { .id = "current_job_id" , .size = sizeof(unsigned char), .rw = I2C_RO },
-    { .id = "finished"       , .size = sizeof(unsigned char), .rw = I2C_RO },
-    { .id = "winning_nonce"  , .size = sizeof(uint32_t)     , .rw = I2C_RO },
+    version,
+    hashrate,
+    current_job_id,
+    finished,
+    winning_nonce
+};
+
+struct i2c_variable i2c_variables[] = {
+    { .id = new_job_id     , .size = sizeof(unsigned char), .rw = I2C_RW },
+    { .id = new_header     , .size = sizeof(uint32_t[20]) , .rw = I2C_RW },
+    { .id = execute_job    , .size = sizeof(unsigned char), .rw = I2C_RW },
+    { .id = force_calibrate, .size = sizeof(unsigned char), .rw = I2C_RW },
+
+    { .id = version        , .size = sizeof(char[8])      , .rw = I2C_RO },
+    { .id = hashrate       , .size = sizeof(uint32_t)     , .rw = I2C_RO },
+    { .id = current_job_id , .size = sizeof(unsigned char), .rw = I2C_RO },
+    { .id = finished       , .size = sizeof(unsigned char), .rw = I2C_RO },
+    { .id = winning_nonce  , .size = sizeof(uint32_t)     , .rw = I2C_RO },
 };
 
 volatile unsigned char new_data = 0;
@@ -85,7 +98,7 @@ unsigned char ZERO = 0;
 unsigned char ONE = 1;
 
 void write_callback() {
-    i2c_read("execute_job", &new_data);
+    i2c_read(execute_job, &new_data);
 }
 
 int main() {
@@ -94,7 +107,7 @@ int main() {
     log_init();
 
     i2c_init(0x69, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
-    i2c_write("version", GIT_VERSION);
+    i2c_write(version, GIT_VERSION);
     i2c_register_write_callback(write_callback);
 
     LOG(INFO, "Ready, waiting for job");
@@ -107,23 +120,23 @@ int main() {
             CM_ATOMIC_BLOCK() {
                 LOG(INFO, "New job");
                 new_data = 0;
-                i2c_write("execute_job", &ZERO);
+                i2c_write(execute_job, &ZERO);
 
-                i2c_read("new_header", header);
+                i2c_read(new_header, header);
                 memcpy(header + 20, sha256_padding, sizeof(sha256_padding));
 
                 unsigned char new_job_id = 0;
-                i2c_read("new_job_id", &new_job_id);
-                i2c_write("current_job_id", &new_job_id);
+                i2c_read(new_job_id, &new_job_id);
+                i2c_write(current_job_id, &new_job_id);
 
-                i2c_write("finished", &ZERO);
+                i2c_write(finished, &ZERO);
                 i2c_dump();
             }
 
             uint32_t result;
             if (scanhash_sha256d(header, &result, &new_data)) {
-                i2c_write("finished", &ONE);
-                i2c_write("winning_nonce", &result);
+                i2c_write(finished, &ONE);
+                i2c_write(winning_nonce, &result);
             }
         }
     }

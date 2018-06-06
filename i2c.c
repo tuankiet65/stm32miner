@@ -211,7 +211,7 @@ void i2c1_isr() {
         int ptr = 0;
         LOG(INFO, "I2C: Data dump");
         for (int i = 0; i < i2c_variables_len; ++i) {
-            LOG(INFO, "%s:", i2c_variables[i].id);
+            LOG(INFO, "ID: 0x%02x:", i2c_variables[i].id);
             
             char hexdump[512];
             memset(hexdump, 0, sizeof(hexdump));
@@ -234,10 +234,10 @@ void i2c1_isr() {
     }
 #endif
 
-bool i2c_read(char variable_id[], volatile void *buf) {
+bool i2c_read(unsigned char variable_id, volatile void *buf) {
     int ptr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
-        if (strcmp(i2c_variables[i].id, variable_id) == 0) {
+        if (i2c_variables[i].id == variable_id) {
             memcpy_volatile(buf, i2c_register + ptr, i2c_variables[i].size);
             return true;
         } else {
@@ -248,10 +248,10 @@ bool i2c_read(char variable_id[], volatile void *buf) {
     return false;
 }
 
-bool i2c_write(char variable_id[], volatile const void *buf) {
+bool i2c_write(unsigned char variable_id, volatile const void *buf) {
     int ptr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
-        if (strcmp(i2c_variables[i].id, variable_id) == 0) {
+        if (i2c_variables[i].id == variable_id) {
             memcpy_volatile(i2c_register + ptr, buf, i2c_variables[i].size);
             return true;
         } else {

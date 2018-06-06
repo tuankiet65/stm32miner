@@ -21,9 +21,9 @@
         I2C_RO,
         I2C_RW
     };
-
+    
     struct i2c_variable {
-        char *id;
+        unsigned char id;
         int size;
         enum i2c_rw_status rw;
     };
@@ -32,8 +32,8 @@
 
     bool i2c_ready();
 
-    bool i2c_read(char variable_id[], volatile void *buf);
-    bool i2c_write(char variable_id[], volatile const void *buf);
+    bool i2c_read(unsigned char variable_id, volatile void *buf);
+    bool i2c_write(unsigned char variable_id, volatile const void *buf);
 
     void i2c_register_read_callback(void (*read_callback)());
     void i2c_register_write_callback(void (*write_callback)());
