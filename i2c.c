@@ -13,6 +13,8 @@ static void (*write_callback)() = NULL;
 static const struct i2c_variable *i2c_variables;
 static int i2c_variables_len;
 
+static enum i2c_states i2c_state = I2C_ADDR_MATCH;
+
 void i2c_init_peripheral(unsigned char addr) {
     rcc_periph_clock_enable(RCC_GPIOA);
 
@@ -123,26 +125,28 @@ void i2c_write_txe(uint32_t i2c) {
 }
 
 void i2c1_isr() {
-    if (i2c_interrupt_addr_match(I2C1)) {
+    if (i2c_state == I2C_ADDR_MATCH && i2c_interrupt_addr_match(I2C1)) {
         LOG(INFO, "I2C: Slave selected");
         if (i2c_is_read(I2C1)) {
             LOG(INFO, "I2C: Slave is transmitting");
+            i2c_state = I2C_WRITE;
         } else {
             LOG(INFO, "I2C: Slave is receiving");
             i2c_ptr = 0xffffffff;
+            i2c_state = I2C_READ;
         }
         i2c_clear_addr_match(I2C1);
         i2c_write_txe(I2C1);
         return;
     } 
     
-    if (i2c_interrupt_nack(I2C1)) {
+    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(I2C1)) {
         LOG(INFO, "I2C: Slave received NACK (STOP should follow)");
         i2c_clear_nack(I2C1);
         return;
     }
     
-    if (i2c_interrupt_read_not_empty(I2C1)) {
+    if (i2c_state == I2C_READ && i2c_interrupt_read_not_empty(I2C1)) {
         if (i2c_ptr == 0xffffffff) {
             i2c_ptr = i2c_get_data(I2C1);
             LOG(INFO, "I2C: Slave received address 0x%02x", i2c_ptr);
@@ -156,7 +160,7 @@ void i2c1_isr() {
             return;
         }
 
-        if (i2c_register_rw[i2c_ptr] != I2C_READ_WRITE) {
+        if (i2c_register_rw[i2c_ptr] != I2C_RW) {
             LOG(INFO, "I2C: Writing into non-writable area (addr: 0x%02x), ignoring", i2c_ptr);
             i2c_ptr++;
             i2c_get_data(I2C1);
@@ -169,7 +173,7 @@ void i2c1_isr() {
         return;
     } 
     
-    if (i2c_interrupt_write_empty(I2C1)) {
+    if (i2c_state == I2C_WRITE && i2c_interrupt_write_empty(I2C1)) {
         if (i2c_ptr >= i2c_register_size) {
             LOG(INFO, "I2C: Read pointer overflow, writing garbage");
             // Slave is writing out data
@@ -184,7 +188,7 @@ void i2c1_isr() {
         i2c_ptr++;
     }
 
-    if (i2c_interrupt_stop(I2C1)) {
+    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_stop(I2C1)) {
         LOG(INFO, "I2C: Slave received STOP");
         i2c_clear_stop(I2C1);
         if (i2c_is_read(I2C1)) {
@@ -194,6 +198,7 @@ void i2c1_isr() {
             LOG(INFO, "I2C: Calling write interrupt");
             if (write_callback) write_callback();
         }
+        i2c_state = I2C_ADDR_MATCH;
         return;
     }
 

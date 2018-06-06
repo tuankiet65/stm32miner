@@ -60,29 +60,29 @@ static void gpio_setup(void) {
 // };
 
 uint32_t header[40];
-const uint32_t sha256_padding[20] = {
+uint32_t sha256_padding[20] = {
     0x80000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000280 
 };
 
-const struct i2c_variable i2c_variables[] = {
-    { .id = "new_job_id"     , .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
-    { .id = "new_header"     , .size = sizeof(uint32_t[20]) , .rw = I2C_READ_WRITE },
-    { .id = "execute_job"    , .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
-    { .id = "force_calibrate", .size = sizeof(unsigned char), .rw = I2C_READ_WRITE },
+struct i2c_variable i2c_variables[] = {
+    { .id = "new_job_id"     , .size = sizeof(unsigned char), .rw = I2C_RW },
+    { .id = "new_header"     , .size = sizeof(uint32_t[20]) , .rw = I2C_RW },
+    { .id = "execute_job"    , .size = sizeof(unsigned char), .rw = I2C_RW },
+    { .id = "force_calibrate", .size = sizeof(unsigned char), .rw = I2C_RW },
 
-    { .id = "version"        , .size = sizeof(char[8])      , .rw = I2C_READ },
-    { .id = "hashrate"       , .size = sizeof(uint32_t)     , .rw = I2C_READ },
-    { .id = "current_job_id" , .size = sizeof(unsigned char), .rw = I2C_READ },
-    { .id = "finished"       , .size = sizeof(unsigned char), .rw = I2C_READ },
-    { .id = "winning_nonce"  , .size = sizeof(uint32_t)     , .rw = I2C_READ },
+    { .id = "version"        , .size = sizeof(char[8])      , .rw = I2C_RO },
+    { .id = "hashrate"       , .size = sizeof(uint32_t)     , .rw = I2C_RO },
+    { .id = "current_job_id" , .size = sizeof(unsigned char), .rw = I2C_RO },
+    { .id = "finished"       , .size = sizeof(unsigned char), .rw = I2C_RO },
+    { .id = "winning_nonce"  , .size = sizeof(uint32_t)     , .rw = I2C_RO },
 };
 
 volatile unsigned char new_data = 0;
 
-const unsigned char ZERO = 0;
-const unsigned char ONE = 1;
+unsigned char ZERO = 0;
+unsigned char ONE = 1;
 
 void write_callback() {
     i2c_read("execute_job", &new_data);
