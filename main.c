@@ -32,8 +32,13 @@
 #define PIN_LED GPIO4
 
 static void gpio_setup(void) {
-    rcc_periph_clock_enable(RCC_GPIOA);
-    gpio_mode_setup(PORT_LED, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, PIN_LED);
+    // Enable clock to IO port A
+    RCC_AHBENR |= RCC_AHBENR_GPIOAEN;
+
+    // Set LED light pin to output
+    GPIOA_MODER |= GPIO_MODE(4, GPIO_MODE_OUTPUT);
+    // Set LED light pin output speed to 100MHz
+    GPIOA_OSPEEDR |= GPIO_OSPEED(4, GPIO_OSPEED_100MHZ);
 }
 
 uint32_t header[40];
@@ -78,8 +83,8 @@ int main() {
     gpio_setup();
     log_init();
 
-    i2c_init(0x69, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
-    i2c_write(version, GIT_VERSION);
+    i2c_init(0x69, 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
+    //i2c_write(version, GIT_VERSION);
     i2c_register_write_callback(write_callback);
 
     LOG(INFO, "stm32miner, commit "GIT_VERSION);
@@ -113,11 +118,13 @@ int main() {
                 i2c_dump();
             }
 
+            gpio_set(PORT_LED, PIN_LED);
             uint32_t result;
             if (scanhash_sha256d(header, &result, &new_data)) {
                 i2c_write(finished, &ONE);
                 i2c_write(winning_nonce, &result);
             }
+            gpio_clear(PORT_LED, PIN_LED);
         }
     }
 

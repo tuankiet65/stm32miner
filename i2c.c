@@ -7,7 +7,6 @@ static unsigned i2c_register_size;
 
 static volatile unsigned char i2c_register[256];
 
-static void (*read_callback)() = NULL;
 static void (*write_callback)() = NULL;
 
 static const struct i2c_variable *i2c_variables;
@@ -15,36 +14,54 @@ static int i2c_variables_len;
 
 static enum i2c_states i2c_state = I2C_ADDR_MATCH;
 
-void i2c_init_peripheral(unsigned char addr) {
-    rcc_periph_clock_enable(RCC_GPIOA);
-
+void i2c_init_peripheral(unsigned char addr, unsigned char mhz) {
+    // Enable GPIOA clock
+    RCC_AHBENR |= RCC_AHBENR_GPIOAEN;
     // Enable I2C1 clock
-    rcc_periph_clock_enable(RCC_I2C1);
-
-    nvic_enable_irq(NVIC_I2C1_IRQ);
+    RCC_APB1ENR |= RCC_APB1ENR_I2C1EN;
 
     // Configure PA9 and PA10 to AF4 (I2C1_SCL/I2C1_SDA)
-    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10);
-    gpio_set_af(GPIOA, GPIO_AF4, GPIO9 | GPIO10);
+    // First, configure PA9/PA10 to alternative function mode
+    GPIOA_MODER |= (GPIO_MODE(9, GPIO_MODE_AF) | GPIO_MODE(10, GPIO_MODE_AF));
+    // Configure PA9/PA10 to pull up
+    GPIOA_PUPDR |= (GPIO_PUPD(9, GPIO_PUPD_PULLUP) | GPIO_PUPD(10, GPIO_PUPD_PULLUP));
+    // Configure PA9 and PA10 to AF4 (I2C1_SCL/I2C1_SDA)
+    GPIOA_AFRH  |= (GPIO_AFR(9 - 8, GPIO_AF4) | GPIO_AFR(10 - 8, GPIO_AF4));
 
-    i2c_peripheral_disable(I2C1);
-    i2c_reset(I2C1);
+    // First, disable I2C
+    // After disabling I2C, all I2C related registers
+    // are put back into its reset value
+    I2C_CR1(I2C1) = 0x00000000;
 
-    i2c_enable_analog_filter(I2C1);
-    i2c_enable_stretching(I2C1);
-    i2c_set_speed(I2C1, i2c_speed_fm_400k, 48);
+    // Now we set the I2C timing
+    // We're aiming for Fast mode (400kbps)
+    uint8_t presc = mhz / 8 - 1;
+    I2C_TIMINGR(I2C1) = ((10 - 1) << I2C_TIMINGR_SCLL_SHIFT)   | // SCL low period
+                        (( 4 - 1) << I2C_TIMINGR_SCLH_SHIFT)   | // SCL high period
+                        ((     3) << I2C_TIMINGR_SDADEL_SHIFT) | // Data hold time
+                        (( 4 - 1) << I2C_TIMINGR_SCLDEL_SHIFT) | // Data setup time
+                        (( presc) << I2C_TIMINGR_PRESC_SHIFT);   // Prescaler
 
-    i2c_set_own_7bit_slave_address(I2C1, addr);
-    // libopencm3 for some freaky reasons doesn't provide
-    // any functions to enable OAR1 address, nor the
-    // i2c_set_own_7bit_slave_address does that, so we'll
-    // have to do it on our own.
-    // Time wasted debugging and swearing: 2 days
-    I2C_OAR1(I2C1) |= I2C_OAR1_OA1EN_ENABLE;
 
-    i2c_enable_interrupt(I2C1, I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_DDRIE | I2C_CR1_NACKIE | I2C_CR1_STOPIE);
+    // Now we set and enable the slave address
+    //  - 7 bit address (implied because bit = 0)
+    //  - Address = addr parameter
+    I2C_OAR1(I2C1)  = ((uint32_t)(addr) << 1) | I2C_OAR1_OA1EN_ENABLE;
 
-    i2c_peripheral_enable(I2C1);
+    // On I2C_CR1, we enable:
+    //  - Peripheral enable
+    //  - TX interrupt
+    //  - RX interrupt
+    //  - Address match interrupt
+    //  - NACK interrupt
+    //  - STOP interrupt
+    //  - Analog filter (implied because bit = 0)
+    //  - SCL stretching (implied because bit = 0)
+    I2C_CR1(I2C1) = I2C_CR1_PE |
+                    I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_DDRIE | I2C_CR1_NACKIE | I2C_CR1_STOPIE;
+
+    // Enable I2C1 interrupt
+    NVIC_ISER(0) |= 1 << NVIC_I2C1_IRQ;
 }
 
 void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
@@ -62,17 +79,14 @@ void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
     }
 }
 
-void i2c_init(unsigned char addr, const struct i2c_variable variables[], const int len) {
-    i2c_init_peripheral(addr);
+void i2c_init(unsigned char addr, unsigned char mhz,
+              const struct i2c_variable variables[], const int len) {
+    i2c_init_peripheral(addr, mhz);
     i2c_init_rw_map(variables, len);
 }
 
 bool i2c_ready() {
     return !i2c_busy(I2C1);
-}
-
-void i2c_register_read_callback(void (*callback)()) {
-    read_callback = callback;
 }
 
 void i2c_register_write_callback(void (*callback)()) {
@@ -103,9 +117,10 @@ bool i2c_is_read(uint32_t i2c) {
     return I2C_ISR(i2c) & I2C_ISR_DIR_READ;
 }
 
-void i2c_clear_addr_match(uint32_t i2c) {
-    I2C_ICR(i2c) |= I2C_ICR_ADDRCF;
-}
+#define i2c_clear_addr_match(i2c) (I2C_ICR(i2c) |= I2C_ICR_ADDRCF)
+#define i2c_clear_nack(i2c) (I2C_ICR(i2c) |= I2C_ICR_NACKCF)
+#define i2c_clear_stop(i2c) (I2C_ICR(i2c) |= I2C_ICR_STOPCF)
+#define i2c_write_txe(i2c) (I2C_ISR(i2c) |= I2C_ISR_TXE)
 
 static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t len) {
     volatile unsigned char *dst_uc = dst;
@@ -114,14 +129,6 @@ static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t
     for (size_t i = 0; i < len; ++i) {
         dst_uc[i] = src_uc[i];
     }
-}
-
-void i2c_clear_nack(uint32_t i2c) {
-    I2C_ICR(i2c) |= I2C_ICR_NACKCF;
-}
-
-void i2c_write_txe(uint32_t i2c) {
-    I2C_ISR(i2c) |= I2C_ISR_TXE;
 }
 
 void i2c1_isr() {
@@ -218,10 +225,7 @@ void i2c1_isr() {
     if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_stop(I2C1)) {
         LOG(INFO, "I2C: Slave received STOP");
         i2c_clear_stop(I2C1);
-        if (i2c_is_read(I2C1)) {
-            LOG(INFO, "I2C: Calling read interrupt");
-            if (read_callback) read_callback();
-        } else {
+        if (!i2c_is_read(I2C1)) {
             LOG(INFO, "I2C: Calling write interrupt");
             if (write_callback) write_callback();
         }

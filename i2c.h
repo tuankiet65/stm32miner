@@ -28,14 +28,14 @@
         enum i2c_rw_status rw;
     };
 
-    void i2c_init(unsigned char addr, const struct i2c_variable variables[], const int len);
+    void i2c_init(unsigned char addr, unsigned char mhz,
+                  const struct i2c_variable variables[], const int len);
 
     bool i2c_ready();
 
     bool i2c_read(unsigned char variable_id, volatile void *buf);
     bool i2c_write(unsigned char variable_id, volatile const void *buf);
 
-    void i2c_register_read_callback(void (*read_callback)());
     void i2c_register_write_callback(void (*write_callback)());
     
     // Interrupt handler
