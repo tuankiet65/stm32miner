@@ -1,6 +1,6 @@
 #include "i2c.h"
 
-static volatile unsigned i2c_ptr = 0xffffffff;
+static volatile unsigned i2c_ptr;
 
 static enum i2c_rw_status i2c_register_rw[256];
 static unsigned i2c_register_size;

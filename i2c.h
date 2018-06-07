@@ -24,7 +24,7 @@
     
     struct i2c_variable {
         unsigned char id;
-        int size;
+        unsigned char size;
         enum i2c_rw_status rw;
     };
 
