@@ -13,12 +13,12 @@
 
 #include "sha256.h"
 
-static uint32_t __attribute__((section(".data"))) sha256_h[8] = {
+static const uint32_t __attribute__((section(".data"))) sha256_h[8] = {
 	0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 	0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 };
 
-static uint32_t __attribute__((section(".data"))) sha256_k[64] = {
+static const uint32_t __attribute__((section(".data"))) sha256_k[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
 	0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 	0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -37,7 +37,7 @@ static uint32_t __attribute__((section(".data"))) sha256_k[64] = {
 	0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-static uint32_t __attribute__((section(".data"))) sha256d_hash1[16] = {
+static const uint32_t __attribute__((section(".data"))) sha256d_hash1[16] = {
 	0x00000000, 0x00000000, 0x00000000, 0x00000000,
 	0x00000000, 0x00000000, 0x00000000, 0x00000000,
 	0x80000000, 0x00000000, 0x00000000, 0x00000000,
@@ -217,7 +217,7 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 	W[30] = S[30];
 	W[31] = S[31];
 	
-	memcpy(S + 8, sha256d_hash1 + 8, 32);
+	memcpy(S + 8, sha256d_hash + 8, 32);
 	S[16] = s1(sha256d_hash1[14]) + sha256d_hash1[ 9] + s0(S[ 1]) + S[ 0];
 	S[17] = s1(sha256d_hash1[15]) + sha256d_hash1[10] + s0(S[ 2]) + S[ 1];
 	S[18] = s1(S[16]) + sha256d_hash1[11] + s0(S[ 3]) + S[ 2];
