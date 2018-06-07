@@ -13,12 +13,12 @@
 
 #include "sha256.h"
 
-static uint32_t __attribute__((section(".data"))) sha256_h[8] = {
+static const uint32_t __attribute__((section(".data"))) sha256_h[8] = {
 	0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 	0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 };
 
-static uint32_t __attribute__((section(".data"))) sha256_k[64] = {
+static const uint32_t __attribute__((section(".data"))) sha256_k[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
 	0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 	0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -35,13 +35,6 @@ static uint32_t __attribute__((section(".data"))) sha256_k[64] = {
 	0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
 	0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
 	0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-};
-
-static uint32_t __attribute__((section(".data"))) sha256d_hash1[16] = {
-	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-	0x80000000, 0x00000000, 0x00000000, 0x00000000,
-	0x00000000, 0x00000000, 0x00000000, 0x00000100
 };
 
 void sha256_init(uint32_t *state) {
@@ -216,24 +209,31 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 	W[24] = S[24];
 	W[30] = S[30];
 	W[31] = S[31];
-	
-	memcpy(S + 8, sha256d_hash1 + 8, 32);
-	S[16] = s1(sha256d_hash1[14]) + sha256d_hash1[ 9] + s0(S[ 1]) + S[ 0];
-	S[17] = s1(sha256d_hash1[15]) + sha256d_hash1[10] + s0(S[ 2]) + S[ 1];
-	S[18] = s1(S[16]) + sha256d_hash1[11] + s0(S[ 3]) + S[ 2];
-	S[19] = s1(S[17]) + sha256d_hash1[12] + s0(S[ 4]) + S[ 3];
-	S[20] = s1(S[18]) + sha256d_hash1[13] + s0(S[ 5]) + S[ 4];
-	S[21] = s1(S[19]) + sha256d_hash1[14] + s0(S[ 6]) + S[ 5];
-	S[22] = s1(S[20]) + sha256d_hash1[15] + s0(S[ 7]) + S[ 6];
-	S[23] = s1(S[21]) + S[16] + s0(sha256d_hash1[ 8]) + S[ 7];
-	S[24] = s1(S[22]) + S[17] + s0(sha256d_hash1[ 9]) + sha256d_hash1[ 8];
-	S[25] = s1(S[23]) + S[18] + s0(sha256d_hash1[10]) + sha256d_hash1[ 9];
-	S[26] = s1(S[24]) + S[19] + s0(sha256d_hash1[11]) + sha256d_hash1[10];
-	S[27] = s1(S[25]) + S[20] + s0(sha256d_hash1[12]) + sha256d_hash1[11];
-	S[28] = s1(S[26]) + S[21] + s0(sha256d_hash1[13]) + sha256d_hash1[12];
-	S[29] = s1(S[27]) + S[22] + s0(sha256d_hash1[14]) + sha256d_hash1[13];
-	S[30] = s1(S[28]) + S[23] + s0(sha256d_hash1[15]) + sha256d_hash1[14];
-	S[31] = s1(S[29]) + S[24] + s0(S[16])             + sha256d_hash1[15];
+
+	S[ 8] = 0x80000000;
+	S[ 9] = 0x00000000;
+	S[10] = 0x00000000;
+	S[11] = 0x00000000;
+	S[12] = 0x00000000;
+	S[13] = 0x00000000;
+	S[14] = 0x00000000;
+	S[15] = 0x00000100;
+	S[16] = s0(S[ 1]) + S[ 0];
+	S[17] = 0x00a00000 + s0(S[ 2]) + S[ 1];
+	S[18] = s1(S[16]) + s0(S[ 3]) + S[ 2];
+	S[19] = s1(S[17]) + s0(S[ 4]) + S[ 3];
+	S[20] = s1(S[18]) + s0(S[ 5]) + S[ 4];
+	S[21] = s1(S[19]) + s0(S[ 6]) + S[ 5];
+	S[22] = s1(S[20]) + 0x00000100 + s0(S[ 7]) + S[ 6];
+	S[23] = s1(S[21]) + S[16] + 0x11002000 + S[ 7];
+	S[24] = s1(S[22]) + S[17] + 0x80000000;
+	S[25] = s1(S[23]) + S[18];
+	S[26] = s1(S[24]) + S[19];
+	S[27] = s1(S[25]) + S[20];
+	S[28] = s1(S[26]) + S[21];
+	S[29] = s1(S[27]) + S[22];
+	S[30] = s1(S[28]) + S[23] + 0x00400022;
+	S[31] = s1(S[29]) + S[24] + s0(S[16]) + 0x00000100;
 	for (i = 32; i < 60; i += 2) {
 		S[i]   = s1(S[i - 2]) + S[i - 7] + s0(S[i - 15]) + S[i - 16];
 		S[i+1] = s1(S[i - 1]) + S[i - 6] + s0(S[i - 14]) + S[i - 15];

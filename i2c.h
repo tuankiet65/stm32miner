@@ -21,25 +21,29 @@
         I2C_RO,
         I2C_RW
     };
-
+    
     struct i2c_variable {
-        char *id;
-        int size;
+        unsigned char id;
+        unsigned char size;
         enum i2c_rw_status rw;
     };
 
-    void i2c_init(unsigned char addr, const struct i2c_variable variables[], const int len);
+    void i2c_init(unsigned char addr, unsigned char mhz,
+                  const struct i2c_variable variables[], const int len);
 
     bool i2c_ready();
 
-    bool i2c_read(char variable_id[], volatile void *buf);
-    bool i2c_write(char variable_id[], volatile const void *buf);
+    bool i2c_read(unsigned char variable_id, volatile void *buf);
+    bool i2c_write(unsigned char variable_id, volatile const void *buf);
 
-    void i2c_register_read_callback(void (*read_callback)());
     void i2c_register_write_callback(void (*write_callback)());
     
     // Interrupt handler
     void i2c1_isr();
 
-    void i2c_dump();
+    #ifdef DEBUG
+        void i2c_dump();
+    #else
+        #define i2c_dump() ;
+    #endif
 #endif
