@@ -10,14 +10,15 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
+
 GIT_SHA1        = $(shell git rev-parse --short HEAD)
 TARGETS         = stm32/f0
 DEVICE          = stm32f030f4p6
-OPENCM3_DIR     = ./libopencm3
+OPENCM3_DIR     = ./libopencm3/
 OBJS            = main.o sha256.o logging.o mini_printf.o clock.o i2c.o
 
-COMMON          += -Wall -Wextra -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax -DGIT_VERSION="\"$(GIT_SHA1)\""
-CFLAGS          += -Os -std=gnu11 $(COMMON)
+COMMON          += -Wall -Wextra -pedantic -fdata-sections -ffunction-sections -Wl,--gc-sections -Wl,--relax -DGIT_VERSION="\"$(GIT_SHA1)\""
+CFLAGS          += -Os -std=c11 $(COMMON)
 LDFLAGS         += -static -nostartfiles $(COMMON)
 LDLIBS          += -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
