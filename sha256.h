@@ -3,7 +3,7 @@
 
     #include <string.h>
     #include <inttypes.h>
-
+   
     #include "logging.h"
 
     uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result, volatile unsigned char *new_data);

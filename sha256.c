@@ -225,8 +225,14 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 		RNDr(S, W, 63);
 	#endif
 
-	for (i = 0; i < 8; i++)
-		S[i] += midstate[i];
+	S[0] += midstate[0];
+	S[1] += midstate[1];
+	S[2] += midstate[2];
+	S[3] += midstate[3];
+	S[4] += midstate[4];
+	S[5] += midstate[5];
+	S[6] += midstate[6];
+	S[7] += midstate[7];
 	
 	W[18] = S[18];
 	W[19] = S[19];
