@@ -22,10 +22,13 @@ void i2c_init_peripheral(unsigned char addr, unsigned char mhz) {
 
     // Configure PA9 and PA10 to AF4 (I2C1_SCL/I2C1_SDA)
     // First, configure PA9/PA10 to alternative function mode
+    GPIOA_MODER &= (~GPIO_MODE_MASK(9)) & (~GPIO_MODE_MASK(10));
     GPIOA_MODER |= (GPIO_MODE(9, GPIO_MODE_AF) | GPIO_MODE(10, GPIO_MODE_AF));
     // Configure PA9/PA10 to pull up
+    GPIOA_PUPDR &= (~GPIO_PUPD_MASK(9)) & (~GPIO_PUPD_MASK(10));
     GPIOA_PUPDR |= (GPIO_PUPD(9, GPIO_PUPD_PULLUP) | GPIO_PUPD(10, GPIO_PUPD_PULLUP));
     // Configure PA9 and PA10 to AF4 (I2C1_SCL/I2C1_SDA)
+    GPIOA_AFRH  &= (~GPIO_AFR_MASK(9 - 8)) & (~GPIO_AFR_MASK(10 - 8));
     GPIOA_AFRH  |= (GPIO_AFR(9 - 8, GPIO_AF4) | GPIO_AFR(10 - 8, GPIO_AF4));
 
     // First, disable I2C
@@ -35,7 +38,7 @@ void i2c_init_peripheral(unsigned char addr, unsigned char mhz) {
 
     // Now we set the I2C timing
     // We're aiming for Fast mode (400kbps)
-    uint8_t presc = mhz / 8 - 1;
+    unsigned char presc = mhz / 8 - 1;
     I2C_TIMINGR(I2C1) = ((10 - 1) << I2C_TIMINGR_SCLL_SHIFT)   | // SCL low period
                         (( 4 - 1) << I2C_TIMINGR_SCLH_SHIFT)   | // SCL high period
                         ((     3) << I2C_TIMINGR_SDADEL_SHIFT) | // Data hold time
