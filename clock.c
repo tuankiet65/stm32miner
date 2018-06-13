@@ -55,7 +55,7 @@ void rcc_clock_setup_in_hsi_out_64mhz(void) {
     // Set HCLK and PCLK divisor to 1 (aka SYSCLK and APB clock == PLL clock)
     RCC_CFGR = (RCC_CFGR & (~RCC_CFGR_HPRE)) | RCC_CFGR_HPRE_NODIV;
     RCC_CFGR = (RCC_CFGR & (~RCC_CFGR_PPRE)) | RCC_CFGR_PPRE_NODIV;
-    // Set global APH1/AHB frequency to 65MHz
+    // Set global APB1/AHB frequency to 64MHz
     rcc_apb1_frequency = 8000000 * 16 / 2;
     rcc_ahb_frequency = rcc_apb1_frequency;
 }
