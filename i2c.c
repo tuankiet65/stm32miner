@@ -219,6 +219,7 @@ void i2c1_isr() {
         LOG(INFO, "I2C: Slave reading 0x%02x from address 0x%02x", i2c_register[i2c_ptr], i2c_ptr);
         i2c_send_data(I2C1, i2c_register[i2c_ptr]);
         i2c_ptr++;
+        return;
     }
 
     if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_stop(I2C1)) {
