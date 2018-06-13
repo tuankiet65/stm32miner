@@ -85,10 +85,6 @@ void i2c_init(unsigned char addr, unsigned char mhz,
     i2c_init_rw_map(variables, len);
 }
 
-bool i2c_ready() {
-    return !i2c_busy(I2C1);
-}
-
 void i2c_register_write_callback(void (*callback)()) {
     write_callback = callback;
 }
