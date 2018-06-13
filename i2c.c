@@ -264,30 +264,35 @@ void i2c1_isr() {
     }
 #endif
 
-bool i2c_read(unsigned char variable_id, volatile void *buf) {
-    int ptr = 0;
+static bool i2c_find_variable_ptr(unsigned char id, unsigned char *ptr, unsigned char *size) {
+    unsigned char curr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
-        if (i2c_variables[i].id == variable_id) {
-            memcpy_volatile(buf, i2c_register + ptr, i2c_variables[i].size);
+        if (i2c_variables[i].id == id) {
+            *ptr = curr;
+            *size = i2c_variables[i].size;
             return true;
         } else {
-            ptr += i2c_variables[i].size;
+            curr += i2c_variables[i].size;
         }
     }
 
     return false;
 }
 
-bool i2c_write(unsigned char variable_id, volatile const void *buf) {
-    int ptr = 0;
-    for (int i = 0; i < i2c_variables_len; ++i) {
-        if (i2c_variables[i].id == variable_id) {
-            memcpy_volatile(i2c_register + ptr, buf, i2c_variables[i].size);
-            return true;
-        } else {
-            ptr += i2c_variables[i].size;
-        }
+bool i2c_read(unsigned char id, volatile void *buf) {
+    unsigned char ptr, size;
+    if (!i2c_find_variable_ptr(id, &ptr, &size)) {
+        return false;
     }
+    memcpy_volatile(buf, i2c_register + ptr, size);
+    return true;
+}
 
-    return false;
+bool i2c_write(unsigned char id, volatile const void *buf) {
+    unsigned char ptr, size;
+    if (!i2c_find_variable_ptr(id, &ptr, &size)) {
+        return false;
+    }
+    memcpy_volatile(i2c_register + ptr, buf, size);
+    return true;
 }
