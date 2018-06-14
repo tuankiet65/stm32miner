@@ -23,6 +23,7 @@
 #include "clock.h"
 #include "sha256.h"
 #include "logging.h"
+#include "address.h"
 
 #ifndef GIT_VERSION
     #define GIT_VERSION "unknown"
@@ -83,8 +84,9 @@ int main() {
     gpio_setup();
     log_init();
 
-    i2c_init(0x69, 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
-    //i2c_write(version, GIT_VERSION);
+    i2c_init(get_address(), 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
+
+    i2c_write(version, GIT_VERSION);
     i2c_register_write_callback(write_callback);
 
     LOG(INFO, "stm32miner, commit "GIT_VERSION);
@@ -113,7 +115,7 @@ int main() {
                 uint8_t new_job_id = 0;
                 i2c_read(new_job_id, &new_job_id);
                 i2c_write(current_job_id, &new_job_id);
-
+                
                 i2c_write(finished, &ZERO);
                 i2c_dump();
             }
