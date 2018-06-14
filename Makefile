@@ -24,6 +24,9 @@ LDLIBS          += -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
 STFLASH         = st-flash
 STFLASH_FLAGS   = --reset --format ihex
+
+NM              = $(PREFIX)-nm
+
 # Be silent per default, but 'make V=1' will show all compiler calls.
 ifneq ($(V),1)
 Q := @
@@ -36,7 +39,7 @@ ifneq ($(PRODUCTION),1)
 CFLAGS += -DDEBUG
 endif
 
-.PHONY: clean all lib upload size
+.PHONY: clean all lib upload size symbols-size
 all: lib binary.elf binary.hex size
 
 libopencm3_clean:
@@ -69,3 +72,6 @@ size: binary.elf
 
 upload: binary.hex
 	$(Q)$(STFLASH) $(STFLASH_FLAGS) write binary.hex
+
+symbols-size: binary.elf
+	$(Q)$(NM) -S --size-sort binary.elf -t dec | grep ' [TtDd] '
