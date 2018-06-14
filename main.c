@@ -17,7 +17,6 @@
 #include <string.h>
 
 #include <libopencm3/cm3/cortex.h>
-#include <libopencm3/stm32/gpio.h>
 
 #include "i2c.h"
 #include "clock.h"
@@ -28,19 +27,6 @@
 #ifndef GIT_VERSION
     #define GIT_VERSION "unknown"
 #endif
-
-#define PORT_LED GPIOA
-#define PIN_LED GPIO4
-
-static void gpio_setup(void) {
-    // Enable clock to IO port A
-    RCC_AHBENR |= RCC_AHBENR_GPIOAEN;
-
-    // Set LED light pin to output
-    GPIOA_MODER |= GPIO_MODE(4, GPIO_MODE_OUTPUT);
-    // Set LED light pin output speed to 100MHz
-    GPIOA_OSPEEDR |= GPIO_OSPEED(4, GPIO_OSPEED_100MHZ);
-}
 
 uint32_t header[40];
 
@@ -81,13 +67,11 @@ void write_callback() {
 
 int main() {
     rcc_clock_setup_in_hsi_out_64mhz();
-    gpio_setup();
     log_init();
 
     i2c_init(get_address(), 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
-
-    i2c_write(version, GIT_VERSION);
     i2c_register_write_callback(write_callback);
+    i2c_write(version, GIT_VERSION);
 
     LOG(INFO, "stm32miner, commit "GIT_VERSION);
     LOG(INFO, "Ready, waiting for job");
@@ -120,15 +104,11 @@ int main() {
                 i2c_dump();
             }
 
-            gpio_set(PORT_LED, PIN_LED);
             uint32_t result;
             if (scanhash_sha256d(header, &result, &new_data)) {
                 i2c_write(finished, &ONE);
                 i2c_write(winning_nonce, &result);
             }
-            gpio_clear(PORT_LED, PIN_LED);
         }
     }
-
-    return 0;
 }
