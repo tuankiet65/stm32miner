@@ -38,7 +38,7 @@ void i2c_init_peripheral(uint8_t addr, uint8_t mhz) {
 
     // Now we set the I2C timing
     // We're aiming for Fast mode (400kbps)
-    uint8_t presc = mhz / 8 - 1;
+    uint8_t presc = (mhz >> 3) - 1;
     I2C_TIMINGR(I2C1) = ((10 - 1) << I2C_TIMINGR_SCLL_SHIFT)   | // SCL low period
                         (( 4 - 1) << I2C_TIMINGR_SCLH_SHIFT)   | // SCL high period
                         ((     3) << I2C_TIMINGR_SDADEL_SHIFT) | // Data hold time
