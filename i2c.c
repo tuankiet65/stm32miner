@@ -309,3 +309,15 @@ bool i2c_write(uint8_t id, volatile const void *buf) {
 
     return true;
 }
+
+void i2c_write_uint8(uint8_t id, volatile uint8_t val) {
+    CM_ATOMIC_BLOCK() {
+        i2c_write(id, &val);
+    }
+}
+
+void i2c_write_uint32(uint8_t id, volatile uint32_t val) {
+    CM_ATOMIC_BLOCK() {
+        i2c_write(id, &val);
+    }
+}

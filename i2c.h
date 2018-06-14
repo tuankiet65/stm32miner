@@ -36,6 +36,9 @@
     bool i2c_read(uint8_t id, volatile void *buf);
     bool i2c_write(uint8_t id, volatile const void *buf);
 
+    void i2c_write_uint8(uint8_t id, volatile uint8_t val);
+    void i2c_write_uint32(uint8_t id, volatile uint32_t val);
+
     void i2c_register_write_callback(void (*write_callback)());
     
     // Interrupt handler
