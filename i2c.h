@@ -23,16 +23,16 @@
     };
     
     struct i2c_variable {
-        unsigned char id;
-        unsigned char size;
+        uint8_t id;
+        uint8_t size;
         enum i2c_rw_status rw;
     };
 
-    void i2c_init(unsigned char addr, unsigned char mhz,
+    void i2c_init(uint8_t addr, uint8_t mhz,
                   const struct i2c_variable variables[], const int len);
 
-    bool i2c_read(unsigned char id, volatile void *buf);
-    bool i2c_write(unsigned char id, volatile const void *buf);
+    bool i2c_read(uint8_t id, volatile void *buf);
+    bool i2c_write(uint8_t id, volatile const void *buf);
 
     void i2c_register_write_callback(void (*write_callback)());
     

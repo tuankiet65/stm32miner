@@ -5,7 +5,7 @@ static volatile unsigned i2c_ptr;
 static enum i2c_rw_status i2c_register_rw[256];
 static unsigned i2c_register_size;
 
-static volatile unsigned char i2c_register[256];
+static volatile uint8_t i2c_register[256];
 
 static void (*write_callback)() = NULL;
 
@@ -14,7 +14,7 @@ static int i2c_variables_len;
 
 static enum i2c_states i2c_state = I2C_ADDR_MATCH;
 
-void i2c_init_peripheral(unsigned char addr, unsigned char mhz) {
+void i2c_init_peripheral(uint8_t addr, uint8_t mhz) {
     // Enable GPIOA clock
     RCC_AHBENR |= RCC_AHBENR_GPIOAEN;
     // Enable I2C1 clock
@@ -38,7 +38,7 @@ void i2c_init_peripheral(unsigned char addr, unsigned char mhz) {
 
     // Now we set the I2C timing
     // We're aiming for Fast mode (400kbps)
-    unsigned char presc = mhz / 8 - 1;
+    uint8_t presc = mhz / 8 - 1;
     I2C_TIMINGR(I2C1) = ((10 - 1) << I2C_TIMINGR_SCLL_SHIFT)   | // SCL low period
                         (( 4 - 1) << I2C_TIMINGR_SCLH_SHIFT)   | // SCL high period
                         ((     3) << I2C_TIMINGR_SDADEL_SHIFT) | // Data hold time
@@ -82,7 +82,7 @@ void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
     }
 }
 
-void i2c_init(unsigned char addr, unsigned char mhz,
+void i2c_init(uint8_t addr, uint8_t mhz,
               const struct i2c_variable variables[], const int len) {
     i2c_init_peripheral(addr, mhz);
     i2c_init_rw_map(variables, len);
@@ -122,8 +122,8 @@ bool i2c_is_read(uint32_t i2c) {
 #define i2c_write_txe(i2c) (I2C_ISR(i2c) |= I2C_ISR_TXE)
 
 static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t len) {
-    volatile unsigned char *dst_uc = dst;
-    volatile const unsigned char *src_uc = src;
+    volatile uint8_t *dst_uc = dst;
+    volatile const uint8_t *src_uc = src;
 
     for (size_t i = 0; i < len; ++i) {
         dst_uc[i] = src_uc[i];
@@ -265,8 +265,8 @@ void i2c1_isr() {
     }
 #endif
 
-static bool i2c_find_variable_ptr(unsigned char id, unsigned char *ptr, unsigned char *size) {
-    unsigned char curr = 0;
+static bool i2c_find_variable_ptr(uint8_t id, uint8_t *ptr, uint8_t *size) {
+    uint8_t curr = 0;
     for (int i = 0; i < i2c_variables_len; ++i) {
         if (i2c_variables[i].id == id) {
             *ptr = curr;
@@ -280,8 +280,8 @@ static bool i2c_find_variable_ptr(unsigned char id, unsigned char *ptr, unsigned
     return false;
 }
 
-bool i2c_read(unsigned char id, volatile void *buf) {
-    unsigned char ptr, size;
+bool i2c_read(uint8_t id, volatile void *buf) {
+    uint8_t ptr, size;
     if (!i2c_find_variable_ptr(id, &ptr, &size)) {
         return false;
     }
@@ -289,8 +289,8 @@ bool i2c_read(unsigned char id, volatile void *buf) {
     return true;
 }
 
-bool i2c_write(unsigned char id, volatile const void *buf) {
-    unsigned char ptr, size;
+bool i2c_write(uint8_t id, volatile const void *buf) {
+    uint8_t ptr, size;
     if (!i2c_find_variable_ptr(id, &ptr, &size)) {
         return false;
     }

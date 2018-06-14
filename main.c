@@ -57,22 +57,22 @@ enum i2c_variable_ids {
 };
 
 struct i2c_variable i2c_variables[] = {
-    { .id = new_job_id     , .size = sizeof(unsigned char), .rw = I2C_RW },
+    { .id = new_job_id     , .size = sizeof(uint8_t), .rw = I2C_RW },
     { .id = new_header     , .size = sizeof(uint32_t[20]) , .rw = I2C_RW },
-    { .id = execute_job    , .size = sizeof(unsigned char), .rw = I2C_RW },
-    { .id = force_calibrate, .size = sizeof(unsigned char), .rw = I2C_RW },
+    { .id = execute_job    , .size = sizeof(uint8_t), .rw = I2C_RW },
+    { .id = force_calibrate, .size = sizeof(uint8_t), .rw = I2C_RW },
 
     { .id = version        , .size = sizeof(char[8])      , .rw = I2C_RO },
     { .id = hashrate       , .size = sizeof(uint32_t)     , .rw = I2C_RO },
-    { .id = current_job_id , .size = sizeof(unsigned char), .rw = I2C_RO },
-    { .id = finished       , .size = sizeof(unsigned char), .rw = I2C_RO },
+    { .id = current_job_id , .size = sizeof(uint8_t), .rw = I2C_RO },
+    { .id = finished       , .size = sizeof(uint8_t), .rw = I2C_RO },
     { .id = winning_nonce  , .size = sizeof(uint32_t)     , .rw = I2C_RO },
 };
 
-volatile unsigned char new_data = 0;
+volatile uint8_t new_data = 0;
 
-unsigned char ZERO = 0;
-unsigned char ONE = 1;
+uint8_t ZERO = 0;
+uint8_t ONE = 1;
 
 void write_callback() {
     i2c_read(execute_job, &new_data);
@@ -110,7 +110,7 @@ int main() {
                 header[20] = 0x80000000;
                 header[31] = 0x00000280;
 
-                unsigned char new_job_id = 0;
+                uint8_t new_job_id = 0;
                 i2c_read(new_job_id, &new_job_id);
                 i2c_write(current_job_id, &new_job_id);
 
