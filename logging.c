@@ -18,9 +18,9 @@
 #ifdef DEBUG
 
 const char* LEVEL_LABEL[] = {
-	"INFO   ",
+	"   INFO",
 	"WARNING",
-	"FATAL  "
+	"  FATAL"
 };
 
 void log_init() {
@@ -42,19 +42,25 @@ void log_init() {
 	usart_enable(USART1);
 }
 
-void LOG(enum log_level level, const char msg[], ...) {
-	char fmt[256], result[1024];
+void LOG(enum log_level level, const char fmt[], ...) {
+	char log_level_str[10], log_str[1024];
+	int len;
 
-	mini_snprintf(fmt, sizeof(fmt), "[ %s ] %s\n", LEVEL_LABEL[level], msg);
+	len = mini_snprintf(log_level_str, sizeof(log_level_str), "[ %s ] \n", LEVEL_LABEL[level]);
+	for (int i = 0; i < len; ++i) {
+		usart_send_blocking(USART1, log_level_str[i]);
+	}
 
 	va_list args;
-	va_start(args, msg);
-	int len = mini_vsnprintf(result, sizeof(result), fmt, args);
+	va_start(args, fmt);
+	len = mini_vsnprintf(log_str, sizeof(log_str), fmt, args);
 	va_end(args);
 
 	for (int i = 0; i < len; ++i) {
-		usart_send_blocking(USART1, result[i]);
+		usart_send_blocking(USART1, log_str[i]);
 	}
+
+	usart_send_blocking(USART1, '\n');
 }
 
 #endif

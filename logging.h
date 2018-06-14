@@ -33,7 +33,7 @@
 
 	#ifdef DEBUG
 		void log_init();
-		void LOG(enum log_level level, const char msg[], ...);
+		void LOG(enum log_level level, const char fmt[], ...);
 	#else
 		#define log_init() ;
 		#define LOG(...) ;
