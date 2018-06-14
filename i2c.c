@@ -89,7 +89,9 @@ void i2c_init(uint8_t addr, uint8_t mhz,
 }
 
 void i2c_register_write_callback(void (*callback)()) {
-    write_callback = callback;
+    CM_ATOMIC_BLOCK() {
+        write_callback = callback;
+    }
 }
 
 bool i2c_interrupt_addr_match(uint32_t i2c) {
@@ -122,11 +124,13 @@ bool i2c_is_read(uint32_t i2c) {
 #define i2c_write_txe(i2c) (I2C_ISR(i2c) |= I2C_ISR_TXE)
 
 static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t len) {
-    volatile uint8_t *dst_uc = dst;
-    volatile const uint8_t *src_uc = src;
+    CM_ATOMIC_BLOCK() {
+        volatile uint8_t *dst_uc = dst;
+        volatile const uint8_t *src_uc = src;
 
-    for (size_t i = 0; i < len; ++i) {
-        dst_uc[i] = src_uc[i];
+        for (size_t i = 0; i < len; ++i) {
+            dst_uc[i] = src_uc[i];
+        }
     }
 }
 
@@ -266,14 +270,16 @@ void i2c1_isr() {
 #endif
 
 static bool i2c_find_variable_ptr(uint8_t id, uint8_t *ptr, uint8_t *size) {
-    uint8_t curr = 0;
-    for (int i = 0; i < i2c_variables_len; ++i) {
-        if (i2c_variables[i].id == id) {
-            *ptr = curr;
-            *size = i2c_variables[i].size;
-            return true;
-        } else {
-            curr += i2c_variables[i].size;
+    CM_ATOMIC_BLOCK() {
+        uint8_t curr = 0;
+        for (int i = 0; i < i2c_variables_len; ++i) {
+            if (i2c_variables[i].id == id) {
+                *ptr = curr;
+                *size = i2c_variables[i].size;
+                return true;
+            } else {
+                curr += i2c_variables[i].size;
+            }
         }
     }
 
@@ -281,19 +287,25 @@ static bool i2c_find_variable_ptr(uint8_t id, uint8_t *ptr, uint8_t *size) {
 }
 
 bool i2c_read(uint8_t id, volatile void *buf) {
-    uint8_t ptr, size;
-    if (!i2c_find_variable_ptr(id, &ptr, &size)) {
-        return false;
+    CM_ATOMIC_BLOCK() {
+        uint8_t ptr, size;
+        if (!i2c_find_variable_ptr(id, &ptr, &size)) {
+            return false;
+        }
+        memcpy_volatile(buf, i2c_register + ptr, size);
     }
-    memcpy_volatile(buf, i2c_register + ptr, size);
+
     return true;
 }
 
 bool i2c_write(uint8_t id, volatile const void *buf) {
-    uint8_t ptr, size;
-    if (!i2c_find_variable_ptr(id, &ptr, &size)) {
-        return false;
+    CM_ATOMIC_BLOCK() {
+        uint8_t ptr, size;
+        if (!i2c_find_variable_ptr(id, &ptr, &size)) {
+            return false;
+        }
+        memcpy_volatile(i2c_register + ptr, buf, size);
     }
-    memcpy_volatile(i2c_register + ptr, buf, size);
+
     return true;
 }
