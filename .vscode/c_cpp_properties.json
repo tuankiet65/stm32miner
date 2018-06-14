@@ -12,8 +12,8 @@
                 "${workspaceFolder}/*",
                 "${workspaceFolder}/libopencm3/include/**"
             ],
-            "defines": ["STM32F0", "STM32F030F4P6", "DEBUG"],
-            "compilerPath": "/bin/arm-none-eabi-gcc",
+            "defines": ["STM32F0", "STM32F030F4P6", "DEBUG", "GIT_VERSION"],
+            "compilerPath": "/bin/arm-none-eabi-gcc -mcpu=cortex-m0 -mthumb -msoft-float",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
