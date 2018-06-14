@@ -72,9 +72,7 @@ void sha256_init(uint32_t *state) {
  * the 512-bit input block to produce a new state.
  */
 void sha256_transform(uint32_t *state, const uint32_t *block) {
-	uint32_t W[64];
-	uint32_t S[8];
-	uint32_t t0, t1;
+	uint32_t W[64], S[8], t0, t1;
 	int i;
 
 	/* 1. Prepare message schedule W. */
@@ -88,7 +86,7 @@ void sha256_transform(uint32_t *state, const uint32_t *block) {
 	memcpy(S, state, 32);
 
 	/* 3. Mix. */
-	for (int i = 0; i < 64; ++i)
+	for (i = 0; i < 64; ++i)
 		RNDr(S, W, i);
 
 	/* 4. Mix local working variables into global state */
@@ -123,8 +121,7 @@ static inline void sha256d_prehash(uint32_t *S, const uint32_t *W) {
 }
 
 static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midstate, const uint32_t *prehash) {
-	uint32_t S[64];
-	uint32_t t0, t1;
+	uint32_t S[64], t0, t1;
 	int i;
 
 	S[18] = W[18];
@@ -159,7 +156,7 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 
 	#ifdef DEBUG
 		// To conserve flash space for UART debugging
-		for (int i = 3; i < 64; ++i) RNDr(S, W, i);
+		for (i = 3; i < 64; ++i) RNDr(S, W, i);
 	#else
 		// Just unroll all of it
 		RNDr(S, W,  3);
@@ -277,7 +274,7 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 
 	#ifdef DEBUG
 		// To conserve flash space for UART debugging
-		for (int i = 0; i < 57; ++i) RNDr(hash, S, i);
+		for (i = 0; i < 57; ++i) RNDr(hash, S, i);
 	#else 
 		RNDr(hash, S,  0);
 		RNDr(hash, S,  1);
@@ -350,10 +347,7 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 }
 
 uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result, volatile unsigned char *new_data) {
-	uint32_t data[64];
-	uint32_t hash[8];
-	uint32_t midstate[8];
-	uint32_t prehash[8];
+	uint32_t data[64], hash[8], midstate[8], prehash[8];
 	
 	memcpy(data, header + 16, 64);
 	sha256d_preextend(data);
