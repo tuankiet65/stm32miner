@@ -104,17 +104,6 @@ void i2c_register_write_callback(void (*callback)()) {
 #define i2c_clear_stop(i2c) (I2C_ICR(i2c) |= I2C_ICR_STOPCF)
 #define i2c_write_txe(i2c) (I2C_ISR(i2c) |= I2C_ISR_TXE)
 
-static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t len) {
-    CM_ATOMIC_BLOCK() {
-        volatile uint8_t *dst_uc = dst;
-        volatile const uint8_t *src_uc = src;
-
-        for (size_t i = 0; i < len; ++i) {
-            dst_uc[i] = src_uc[i];
-        }
-    }
-}
-
 void i2c1_isr() {
     // Ok so I just want to rant for a little bit
     // When a master wants to read from a slave, it'll:
@@ -250,6 +239,17 @@ void i2c1_isr() {
         }
     }
 #endif
+
+static void memcpy_volatile(volatile void *dst, volatile const void *src, size_t len) {
+    CM_ATOMIC_BLOCK() {
+        volatile uint8_t *dst_uc = dst;
+        volatile const uint8_t *src_uc = src;
+
+        for (size_t i = 0; i < len; ++i) {
+            dst_uc[i] = src_uc[i];
+        }
+    }
+}
 
 static bool i2c_find_variable_ptr(uint8_t id, uint8_t *ptr, uint8_t *size) {
     uint8_t curr = 0;
