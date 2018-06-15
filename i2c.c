@@ -10,7 +10,7 @@ static volatile uint8_t i2c_register[256];
 static void (*write_callback)() = NULL;
 
 static const struct i2c_variable *i2c_variables;
-static int i2c_variables_len;
+static uint8_t i2c_variables_len;
 
 static enum i2c_states i2c_state = I2C_ADDR_MATCH;
 
@@ -67,11 +67,11 @@ void i2c_init_peripheral(uint8_t addr, uint8_t mhz) {
     NVIC_ISER(0) |= 1 << NVIC_I2C1_IRQ;
 }
 
-void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
+void i2c_init_rw_map(const struct i2c_variable variables[], const uint8_t len) {
     i2c_variables = variables;
     i2c_variables_len = len;
-    for (int i = 0; i < len; ++i) {
-        for (int i2 = 0; i2 < variables[i].size; ++i2) {
+    for (uint8_t i = 0; i < len; ++i) {
+        for (uint8_t i2 = 0; i2 < variables[i].size; ++i2) {
             i2c_register_rw[i2c_register_size] = variables[i].rw;
             i2c_register_size++;
             if (i2c_register_size >= sizeof(i2c_register_rw)) {
@@ -83,15 +83,13 @@ void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
 }
 
 void i2c_init(uint8_t addr, uint8_t mhz,
-              const struct i2c_variable variables[], const int len) {
+              const struct i2c_variable variables[], const uint8_t len) {
     i2c_init_peripheral(addr, mhz);
     i2c_init_rw_map(variables, len);
 }
 
 void i2c_register_write_callback(void (*callback)()) {
-    CM_ATOMIC_BLOCK() {
-        write_callback = callback;
-    }
+    write_callback = callback;
 }
 
 bool i2c_interrupt_addr_match(uint32_t i2c) {

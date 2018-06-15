@@ -31,7 +31,7 @@
     };
 
     void i2c_init(uint8_t addr, uint8_t mhz,
-                  const struct i2c_variable variables[], const int len);
+                  const struct i2c_variable variables[], const uint8_t len);
 
     bool i2c_read(uint8_t id, volatile void *buf);
     bool i2c_write(uint8_t id, volatile const void *buf);
