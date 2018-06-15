@@ -92,29 +92,12 @@ void i2c_register_write_callback(void (*callback)()) {
     write_callback = callback;
 }
 
-bool i2c_interrupt_addr_match(uint32_t i2c) {
-    return I2C_ISR(i2c) & I2C_ISR_ADDR;
-}
-
-bool i2c_interrupt_stop(uint32_t i2c) {
-    return I2C_ISR(i2c) & I2C_ISR_STOPF;
-}
-
-bool i2c_interrupt_nack(uint32_t i2c) {
-    return I2C_ISR(i2c) & I2C_ISR_NACKF;
-}
-
-bool i2c_interrupt_read_not_empty(uint32_t i2c) {
-    return I2C_ISR(i2c) & I2C_ISR_RXNE;
-}
-
-bool i2c_interrupt_write_empty(uint32_t i2c) {
-    return I2C_ISR(i2c) & I2C_ISR_TXE;
-}
-
-bool i2c_is_read(uint32_t i2c) {
-    return I2C_ISR(i2c) & I2C_ISR_DIR_READ;
-}
+#define i2c_interrupt_addr_match(isr) (isr & I2C_ISR_ADDR)
+#define i2c_interrupt_stop(isr) (isr & I2C_ISR_STOPF)
+#define i2c_interrupt_nack(isr) (isr & I2C_ISR_NACKF)
+#define i2c_interrupt_read_not_empty(isr) (isr & I2C_ISR_RXNE)
+#define i2c_interrupt_write_empty(isr) (isr & I2C_ISR_TXE)
+#define i2c_is_read(isr) (isr & I2C_ISR_DIR_READ)
 
 #define i2c_clear_addr_match(i2c) (I2C_ICR(i2c) |= I2C_ICR_ADDRCF)
 #define i2c_clear_nack(i2c) (I2C_ICR(i2c) |= I2C_ICR_NACKCF)
@@ -153,16 +136,17 @@ void i2c1_isr() {
     //  - Address match event must occured
     //  - Last state must be I2C_READ
     //  - Master must be requesting data (aka RW bit is READ)
+    uint32_t isr = I2C_ISR(I2C1);
 
-    if (i2c_interrupt_addr_match(I2C1) &&
+    if (i2c_interrupt_addr_match(isr) &&
             ((i2c_state == I2C_ADDR_MATCH) ||
-                ((i2c_state == I2C_READ) && (i2c_is_read(I2C1)))
+                ((i2c_state == I2C_READ) && (i2c_is_read(isr)))
         )) {
         LOG("I2C: Slave selected");
-        if ((i2c_state == I2C_READ) && (i2c_is_read(I2C1))) {
+        if ((i2c_state == I2C_READ) && (i2c_is_read(isr))) {
             LOG("I2C: Repeated START detected");
         }
-        if (i2c_is_read(I2C1)) {
+        if (i2c_is_read(isr)) {
             LOG("I2C: Slave is transmitting");
             i2c_state = I2C_WRITE;
         } else {
@@ -175,13 +159,13 @@ void i2c1_isr() {
         return;
     }
     
-    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(I2C1)) {
+    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(isr)) {
         LOG("I2C: Slave received NACK (STOP should follow)");
         i2c_clear_nack(I2C1);
         return;
     }
     
-    if (i2c_state == I2C_READ && i2c_interrupt_read_not_empty(I2C1)) {
+    if (i2c_state == I2C_READ && i2c_interrupt_read_not_empty(isr)) {
         if (i2c_ptr == 0xffffffff) {
             i2c_ptr = i2c_get_data(I2C1);
             LOG("I2C: Slave received address 0x%02x", i2c_ptr);
@@ -208,7 +192,7 @@ void i2c1_isr() {
         return;
     } 
     
-    if (i2c_state == I2C_WRITE && i2c_interrupt_write_empty(I2C1)) {
+    if (i2c_state == I2C_WRITE && i2c_interrupt_write_empty(isr)) {
         if (i2c_ptr >= i2c_register_size) {
             LOG("I2C: Read pointer overflow, writing garbage");
             // Slave is writing out data
@@ -224,7 +208,7 @@ void i2c1_isr() {
         return;
     }
 
-    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_stop(I2C1)) {
+    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_stop(isr)) {
         LOG("I2C: Slave received STOP");
         i2c_clear_stop(I2C1);
         if (!i2c_is_read(I2C1)) {
