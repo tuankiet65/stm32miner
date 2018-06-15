@@ -54,11 +54,11 @@ void write_callback() {
 }
 
 int main() {
-    rcc_clock_setup_in_hsi_out_64mhz();
+    uint8_t clockrate = rcc_clock_setup_in_hsi_out_64mhz();
     log_init();
-    systick_init(64);
+    systick_init(clockrate);
 
-    i2c_init(get_address(), 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
+    i2c_init(get_address(), clockrate, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
     i2c_register_write_callback(write_callback);
     i2c_write(version, GIT_VERSION);
     i2c_write_uint8(state, STATE_READY);
