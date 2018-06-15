@@ -73,10 +73,9 @@ int main() {
                 header[20] = 0x80000000;
                 header[31] = 0x00000280;
 
-                uint8_t new_job_id = 0;
-                i2c_read(new_job_id, &new_job_id);
-                i2c_write(current_job_id, &new_job_id);
-                LOG("new job id: 0x%02x", new_job_id);
+                uint8_t job_id = 0;
+                i2c_read(new_job_id, &job_id);
+                i2c_write(current_job_id, &job_id);
                 
                 i2c_write_uint8(state, STATE_WORKING);
                 i2c_dump();
