@@ -268,16 +268,14 @@ void i2c1_isr() {
 #endif
 
 static bool i2c_find_variable_ptr(uint8_t id, uint8_t *ptr, uint8_t *size) {
-    CM_ATOMIC_BLOCK() {
-        uint8_t curr = 0;
-        for (int i = 0; i < i2c_variables_len; ++i) {
-            if (i2c_variables[i].id == id) {
-                *ptr = curr;
-                *size = i2c_variables[i].size;
-                return true;
-            } else {
-                curr += i2c_variables[i].size;
-            }
+    uint8_t curr = 0;
+    for (int i = 0; i < i2c_variables_len; ++i) {
+        if (i2c_variables[i].id == id) {
+            *ptr = curr;
+            *size = i2c_variables[i].size;
+            return true;
+        } else {
+            curr += i2c_variables[i].size;
         }
     }
 
@@ -285,37 +283,29 @@ static bool i2c_find_variable_ptr(uint8_t id, uint8_t *ptr, uint8_t *size) {
 }
 
 bool i2c_read(uint8_t id, volatile void *buf) {
-    CM_ATOMIC_BLOCK() {
-        uint8_t ptr, size;
-        if (!i2c_find_variable_ptr(id, &ptr, &size)) {
-            return false;
-        }
-        memcpy_volatile(buf, i2c_register + ptr, size);
+    uint8_t ptr, size;
+    if (!i2c_find_variable_ptr(id, &ptr, &size)) {
+        return false;
     }
+    memcpy_volatile(buf, i2c_register + ptr, size);
 
     return true;
 }
 
 bool i2c_write(uint8_t id, volatile const void *buf) {
-    CM_ATOMIC_BLOCK() {
-        uint8_t ptr, size;
-        if (!i2c_find_variable_ptr(id, &ptr, &size)) {
-            return false;
-        }
-        memcpy_volatile(i2c_register + ptr, buf, size);
+    uint8_t ptr, size;
+    if (!i2c_find_variable_ptr(id, &ptr, &size)) {
+        return false;
     }
+    memcpy_volatile(i2c_register + ptr, buf, size);
 
     return true;
 }
 
 void i2c_write_uint8(uint8_t id, volatile uint8_t val) {
-    CM_ATOMIC_BLOCK() {
-        i2c_write(id, &val);
-    }
+    i2c_write(id, &val);
 }
 
 void i2c_write_uint32(uint8_t id, volatile uint32_t val) {
-    CM_ATOMIC_BLOCK() {
-        i2c_write(id, &val);
-    }
+    i2c_write(id, &val);
 }
