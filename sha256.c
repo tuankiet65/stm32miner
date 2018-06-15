@@ -345,9 +345,13 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 	         + sha256_h[7];
 }
 
-uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result, volatile uint8_t *new_data) {
+uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result,
+                          volatile uint8_t *new_data,
+						  volatile uint32_t **nonce_ptr) {
 	uint32_t data[64], hash[8], midstate[8], prehash[8];
 	
+	*nonce_ptr = &(data[3]);
+
 	memcpy(data, header + 16, 64);
 	sha256d_preextend(data);
 	
