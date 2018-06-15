@@ -75,7 +75,7 @@ void i2c_init_rw_map(const struct i2c_variable variables[], const int len) {
             i2c_register_rw[i2c_register_size] = variables[i].rw;
             i2c_register_size++;
             if (i2c_register_size >= sizeof(i2c_register_rw)) {
-                LOG(INFO, "I2C: Register size overflow, bailing");
+                LOG("I2C: Register size overflow, bailing");
                 return;
             }
         }
@@ -160,15 +160,15 @@ void i2c1_isr() {
             ((i2c_state == I2C_ADDR_MATCH) ||
                 ((i2c_state == I2C_READ) && (i2c_is_read(I2C1)))
         )) {
-        LOG(INFO, "I2C: Slave selected");
+        LOG("I2C: Slave selected");
         if ((i2c_state == I2C_READ) && (i2c_is_read(I2C1))) {
-            LOG(INFO, "I2C: Repeated START detected");
+            LOG("I2C: Repeated START detected");
         }
         if (i2c_is_read(I2C1)) {
-            LOG(INFO, "I2C: Slave is transmitting");
+            LOG("I2C: Slave is transmitting");
             i2c_state = I2C_WRITE;
         } else {
-            LOG(INFO, "I2C: Slave is receiving");
+            LOG("I2C: Slave is receiving");
             i2c_ptr = 0xffffffff;
             i2c_state = I2C_READ;
         }
@@ -178,7 +178,7 @@ void i2c1_isr() {
     }
     
     if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(I2C1)) {
-        LOG(INFO, "I2C: Slave received NACK (STOP should follow)");
+        LOG("I2C: Slave received NACK (STOP should follow)");
         i2c_clear_nack(I2C1);
         return;
     }
@@ -186,33 +186,33 @@ void i2c1_isr() {
     if (i2c_state == I2C_READ && i2c_interrupt_read_not_empty(I2C1)) {
         if (i2c_ptr == 0xffffffff) {
             i2c_ptr = i2c_get_data(I2C1);
-            LOG(INFO, "I2C: Slave received address 0x%02x", i2c_ptr);
+            LOG("I2C: Slave received address 0x%02x", i2c_ptr);
             return;
         } 
         
         if (i2c_ptr >= i2c_register_size) {
-            LOG(INFO, "I2C: Write pointer overflow, ignoring");
+            LOG("I2C: Write pointer overflow, ignoring");
             // TODO: does this really read RX data? (or the call gets eliminated by LTO?)
             i2c_get_data(I2C1);
             return;
         }
 
         if (i2c_register_rw[i2c_ptr] != I2C_RW) {
-            LOG(INFO, "I2C: Writing into non-writable area (addr: 0x%02x), ignoring", i2c_ptr);
+            LOG("I2C: Writing into non-writable area (addr: 0x%02x), ignoring", i2c_ptr);
             i2c_ptr++;
             i2c_get_data(I2C1);
             return;
         }
 
         i2c_register[i2c_ptr] = i2c_get_data(I2C1);
-        LOG(INFO, "I2C: Slave received data 0x%02x, writing into 0x%02x", i2c_register[i2c_ptr], i2c_ptr);
+        LOG("I2C: Slave received data 0x%02x, writing into 0x%02x", i2c_register[i2c_ptr], i2c_ptr);
         i2c_ptr++;
         return;
     } 
     
     if (i2c_state == I2C_WRITE && i2c_interrupt_write_empty(I2C1)) {
         if (i2c_ptr >= i2c_register_size) {
-            LOG(INFO, "I2C: Read pointer overflow, writing garbage");
+            LOG("I2C: Read pointer overflow, writing garbage");
             // Slave is writing out data
             // As there's no way for the slave to terminate read
             // transaction, we'll just have to send garbage
@@ -220,17 +220,17 @@ void i2c1_isr() {
             return;
         }
 
-        LOG(INFO, "I2C: Slave reading 0x%02x from address 0x%02x", i2c_register[i2c_ptr], i2c_ptr);
+        LOG("I2C: Slave reading 0x%02x from address 0x%02x", i2c_register[i2c_ptr], i2c_ptr);
         i2c_send_data(I2C1, i2c_register[i2c_ptr]);
         i2c_ptr++;
         return;
     }
 
     if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_stop(I2C1)) {
-        LOG(INFO, "I2C: Slave received STOP");
+        LOG("I2C: Slave received STOP");
         i2c_clear_stop(I2C1);
         if (!i2c_is_read(I2C1)) {
-            LOG(INFO, "I2C: Calling write interrupt");
+            LOG("I2C: Calling write interrupt");
             if (write_callback) write_callback();
         }
         i2c_state = I2C_ADDR_MATCH;
@@ -244,9 +244,9 @@ void i2c1_isr() {
     void i2c_dump() {
         const char h2d[16] = "0123456789abcdef";
         int ptr = 0;
-        LOG(INFO, "I2C: Data dump");
+        LOG("I2C: Data dump");
         for (int i = 0; i < i2c_variables_len; ++i) {
-            LOG(INFO, "ID: 0x%02x:", i2c_variables[i].id);
+            LOG("ID: 0x%02x:", i2c_variables[i].id);
             
             char hexdump[512];
             memset(hexdump, 0, sizeof(hexdump));
@@ -257,13 +257,13 @@ void i2c1_isr() {
                 hexdump[3*(i2%16)+2] = ' ';
 
                 if (i2 % 16 == 15) {
-                    LOG(INFO, "    %s", hexdump);
+                    LOG("    %s", hexdump);
                     memset(hexdump, 0, sizeof(hexdump));
                 }
             }
             
             if (hexdump[0] != '\0') {
-                LOG(INFO, "    %s", hexdump);
+                LOG("    %s", hexdump);
             }
         }
     }

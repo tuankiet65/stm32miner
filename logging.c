@@ -17,12 +17,6 @@
 
 #ifdef DEBUG
 
-const char* LEVEL_LABEL[] = {
-	"   INFO",
-	"WARNING",
-	"  FATAL"
-};
-
 void log_init() {
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_USART1);
@@ -42,13 +36,13 @@ void log_init() {
 	usart_enable(USART1);
 }
 
-void LOG(enum log_level level, const char fmt[], ...) {
-	char log_level_str[10], log_str[1024];
+void LOG(const char fmt[], ...) {
+	char log_str[1024];
 	int len;
 
-	len = mini_snprintf(log_level_str, sizeof(log_level_str), "[ %s ] \n", LEVEL_LABEL[level]);
-	for (int i = 0; i < len; ++i) {
-		usart_send_blocking(USART1, log_level_str[i]);
+	const char prefix[] = "[ DEBUG ] ";
+	for (size_t i = 0; i < strlen(prefix); ++i) {
+		usart_send_blocking(USART1, prefix[i]);
 	}
 
 	va_list args;

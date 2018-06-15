@@ -72,13 +72,13 @@ int main() {
     rcc_clock_setup_in_hsi_out_64mhz();
     log_init();
     
-    i2c_init(get_address(), 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
+    i2c_init(0x69, 64, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
     i2c_register_write_callback(write_callback);
     i2c_write(version, GIT_VERSION);
     i2c_write_uint8(state, STATE_READY);
 
-    LOG(INFO, "stm32miner, commit "GIT_VERSION);
-    LOG(INFO, "Ready, waiting for job");
+    LOG("stm32miner, commit "GIT_VERSION);
+    LOG("Ready, waiting for job");
 
     while (1) {
         // Critical section because I2C is interrupt-driven
@@ -91,7 +91,7 @@ int main() {
                 i2c_write_uint32(hashrate, 0);
                 i2c_write_uint32(winning_nonce, 0);
 
-                LOG(INFO, "New job");
+                LOG("New job");
                 new_data = 0;
 
                 i2c_read(new_header, header);
@@ -107,6 +107,7 @@ int main() {
                 uint8_t new_job_id = 0;
                 i2c_read(new_job_id, &new_job_id);
                 i2c_write(current_job_id, &new_job_id);
+                LOG("new job id: 0x%02x", new_job_id);
                 
                 i2c_write_uint8(state, STATE_WORKING);
                 i2c_dump();

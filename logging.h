@@ -17,7 +17,7 @@
 	#define LOGGING_H
 	
 	#include <stdarg.h>
-	#include <stdio.h>
+	#include <string.h>
 	
 	#include <libopencm3/stm32/rcc.h>
 	#include <libopencm3/stm32/gpio.h>
@@ -25,15 +25,9 @@
 
 	#include "mini_printf.h"
 
-	enum log_level {
-		INFO = 0,
-		WARNING = 1,
-		FATAL = 2
-	};
-
 	#ifdef DEBUG
 		void log_init();
-		void LOG(enum log_level level, const char fmt[], ...);
+		void LOG(const char fmt[], ...);
 	#else
 		#define log_init() ;
 		#define LOG(...) ;
