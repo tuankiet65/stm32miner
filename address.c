@@ -28,9 +28,18 @@ uint8_t get_address() {
                    GPIO_PUPD(7, GPIO_PUPD_PULLDOWN);
 
     uint32_t gpioa = GPIOA_IDR;
-
-    return (
-       ((gpioa & (GPIO_IDR(5) | GPIO_IDR(6) | GPIO_IDR(7))) >> 3) |
-        (gpioa & (GPIO_IDR(0) | GPIO_IDR(1)))
+    uint8_t address = (
+       ((gpioa & (GPIO7 | GPIO6 | GPIO5)) >> 3) |
+        (gpioa & (GPIO1 | GPIO0))
     );
+
+    LOG("get_address: GPIOA is 0x%04x", gpioa);
+    LOG("get_address: PA7 is %d", (gpioa & GPIO7) ? (1) : (0));
+    LOG("get_address: PA6 is %d", (gpioa & GPIO6) ? (1) : (0));
+    LOG("get_address: PA5 is %d", (gpioa & GPIO5) ? (1) : (0));
+    LOG("get_address: PA1 is %d", (gpioa & GPIO1) ? (1) : (0));
+    LOG("get_address: PA0 is %d", (gpioa & GPIO0) ? (1) : (0));
+    LOG("get_address: address is 0x%02x", address);
+    
+    return address;
 }
