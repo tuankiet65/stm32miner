@@ -64,7 +64,14 @@ static const uint32_t __attribute__((section(".data"))) sha256_k[64] = {
 };
 
 void sha256_init(uint32_t *state) {
-	memcpy(state, sha256_h, 32);
+	state[0] = sha256_h[0];
+	state[1] = sha256_h[1];
+	state[2] = sha256_h[2];
+	state[3] = sha256_h[3];
+	state[4] = sha256_h[4];
+	state[5] = sha256_h[5];
+	state[6] = sha256_h[6];
+	state[7] = sha256_h[7];
 }
 
 /*
@@ -76,13 +83,13 @@ void sha256_transform(uint32_t *state, const uint32_t *block) {
 	int i;
 
 	/* 1. Prepare message schedule W. */
-	memcpy(W, block, 64);
+	for (i = 0; i < 16; ++i) W[i] = block[i];
 	for (i = 16; i < 64; i++) {
 		W[i]   = s1(W[i - 2]) + W[i - 7] + s0(W[i - 15]) + W[i - 16];
 	}
 
 	/* 2. Initialize working variables. */
-	memcpy(S, state, 32);
+	for (i = 0; i < 8; ++i) S[i] = state[i];
 
 	/* 3. Mix. */
 	for (i = 0; i < 64; ++i)
@@ -93,33 +100,29 @@ void sha256_transform(uint32_t *state, const uint32_t *block) {
 		state[i] += S[i];
 }
 
-static inline void sha256d_preextend(uint32_t *W) {
+void sha256d_preextend(uint32_t *W) {
 	W[16] = s1(W[14]) + W[ 9] + s0(W[ 1]) + W[ 0];
 	W[17] = s1(W[15]) + W[10] + s0(W[ 2]) + W[ 1];
 	W[18] = s1(W[16]) + W[11]             + W[ 2];
 	W[19] = s1(W[17]) + W[12] + s0(W[ 4]);
-	W[20] =             W[13] + s0(W[ 5]) + W[ 4];
-	W[21] =             W[14] + s0(W[ 6]) + W[ 5];
-	W[22] =             W[15] + s0(W[ 7]) + W[ 6];
-	W[23] =             W[16] + s0(W[ 8]) + W[ 7];
-	W[24] =             W[17] + s0(W[ 9]) + W[ 8];
-	W[25] =                     s0(W[10]) + W[ 9];
-	W[26] =                     s0(W[11]) + W[10];
-	W[27] =                     s0(W[12]) + W[11];
-	W[28] =                     s0(W[13]) + W[12];
-	W[29] =                     s0(W[14]) + W[13];
-	W[30] =                     s0(W[15]) + W[14];
-	W[31] =                     s0(W[16]) + W[15];
+
+	for (int i = 20; i < 25; i++) {
+		W[i]   = W[i - 7] + s0(W[i - 15]) + W[i - 16];
+	}
+
+	for (int i = 25; i < 32; i++) {
+		W[i]   = s0(W[i - 15]) + W[i - 16];
+	}
 }
 
-static inline void sha256d_prehash(uint32_t *S, const uint32_t *W) {
+static void sha256d_prehash(uint32_t *S, const uint32_t *W) {
 	uint32_t t0, t1;
 	RNDr(S, W, 0);
 	RNDr(S, W, 1);
 	RNDr(S, W, 2);
 }
 
-static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midstate, const uint32_t *prehash) {
+static void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midstate, const uint32_t *prehash) {
 	uint32_t S[64], t0, t1;
 	int i;
 
@@ -151,7 +154,14 @@ static inline void sha256d_ms(uint32_t *hash, uint32_t *W, const uint32_t *midst
 		W[i+1] = s1(W[i - 1]) + W[i - 6] + s0(W[i - 14]) + W[i - 15];
 	}
 
-	memcpy(S, prehash, 32);
+	S[0] = prehash[0];
+	S[1] = prehash[1];
+	S[2] = prehash[2];
+	S[3] = prehash[3];
+	S[4] = prehash[4];
+	S[5] = prehash[5];
+	S[6] = prehash[6];
+	S[7] = prehash[7];
 
 	#ifdef DEBUG
 		// To conserve flash space for UART debugging
@@ -352,12 +362,12 @@ uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result,
 	
 	*nonce_ptr = &(data[3]);
 
-	memcpy(data, header + 16, 64);
+	for (int i = 0; i < 16; ++i) data[i] = header[i + 16];
 	sha256d_preextend(data);
 	
 	sha256_init(midstate);
 	sha256_transform(midstate, header);
-	memcpy(prehash, midstate, 32);
+	for (int i = 0; i < 8; ++i) prehash[i] = midstate[i];
 	sha256d_prehash(prehash, header + 16);
 	
 	do {
