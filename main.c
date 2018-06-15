@@ -56,7 +56,7 @@ void write_callback() {
 int main() {
     uint8_t clockrate = rcc_clock_setup_in_hsi_out_64mhz();
     log_init();
-    systick_init(clockrate);
+    systick_init(clockrate, 1000);
 
     i2c_init(get_address(), clockrate, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
     i2c_register_write_callback(write_callback);
