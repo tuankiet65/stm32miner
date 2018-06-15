@@ -19,6 +19,7 @@
 #include <libopencm3/cm3/cortex.h>
 
 #include "i2c.h"
+#include "led.h"
 #include "clock.h"
 #include "sha256.h"
 #include "logging.h"
@@ -44,9 +45,7 @@ void sys_tick_handler() {
     i2c_write(hashrate, &calculated_hashrate);
     LOG("Hashrate: %d hash/s", calculated_hashrate);
 
-    // Toggle PA4
-    uint32_t gpioa_odr = GPIOA_ODR;
-    GPIO_BSRR(GPIOA) = ((gpioa_odr & GPIO4) << 16) | ((~gpioa_odr) & GPIO4);
+    led_toggle();
 }
 
 void write_callback() {
@@ -57,6 +56,7 @@ int main() {
     uint8_t clockrate = rcc_clock_setup_in_hsi_out_64mhz();
     log_init();
     systick_init(clockrate, 1000);
+    led_init();
 
     i2c_init(get_address(), clockrate, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
     i2c_register_write_callback(write_callback);
@@ -110,6 +110,8 @@ int main() {
                 i2c_write_uint8(state, STATE_NOT_FOUND);
             }
             working = 0;
+
+            led_off();
         }
     }
 
