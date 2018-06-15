@@ -1,3 +1,18 @@
+/*
+ *  i2c_variables.h
+ *  Copyright (C) 2018 Ho Tuan Kiet
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ */
+
 #ifndef I2C_VARIABLES_H
     #define I2C_VARIABLES_H
 
@@ -20,7 +35,7 @@
     #define STATE_NOT_FOUND 0x04
     #define STATE_ERROR 0xff
 
-    struct i2c_variable __attribute__((weak)) i2c_variables[] = {
+    struct i2c_variable i2c_variables[] = {
         { .id = version        , .size = sizeof(char[8])     , .rw = I2C_RO },
         { .id = state          , .size = sizeof(uint8_t)     , .rw = I2C_RO },
         { .id = hashrate       , .size = sizeof(uint32_t)    , .rw = I2C_RO },

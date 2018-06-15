@@ -1,7 +1,22 @@
+/*
+ *  systick.c
+ *  Copyright (C) 2018 Ho Tuan Kiet
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ */
+
 #include "systick.h"
 
 void systick_init(uint32_t mhz, uint32_t ms) {
-    // Enable SysTick, triggering every 1s, clock source = (HCLK / 8)
+    // Enable SysTick, clock source = (HCLK / 8)
     // Small rant: PM0215, pg. 86.
     //  * CLKSOURCE = 0: External reference clock = (HCLK / 8)
     //  * CLKSOURCE = 1: Processor clock = (HCLK)
