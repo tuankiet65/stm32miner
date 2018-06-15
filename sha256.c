@@ -77,9 +77,8 @@ void sha256_transform(uint32_t *state, const uint32_t *block) {
 
 	/* 1. Prepare message schedule W. */
 	memcpy(W, block, 64);
-	for (i = 16; i < 64; i += 2) {
+	for (i = 16; i < 64; i++) {
 		W[i]   = s1(W[i - 2]) + W[i - 7] + s0(W[i - 15]) + W[i - 16];
-		W[i+1] = s1(W[i - 1]) + W[i - 6] + s0(W[i - 14]) + W[i - 15];
 	}
 
 	/* 2. Initialize working variables. */
@@ -360,12 +359,12 @@ uint32_t scanhash_sha256d(uint32_t header[], uint32_t *result, volatile uint8_t 
 	do {
 		sha256d_ms(hash, data, midstate, prehash);
 		if (hash[7] == 0x00000000) {
-			LOG(INFO, "winning nonce: 0x%08x", __builtin_bswap32(data[3]));
+			LOG("winning nonce: 0x%08x", __builtin_bswap32(data[3]));
 			*result = data[3];
             return 1;
         }
 		if (data[3] % 0x1000 == 0) {
-			LOG(INFO, "nonce: 0x%08x, first byte: 0x%08x", __builtin_bswap32(data[3]), hash[7]);
+			LOG("nonce: 0x%08x, first byte: 0x%08x", __builtin_bswap32(data[3]), hash[7]);
 		}
 		data[3]++;
 	} while (*new_data == 0);
