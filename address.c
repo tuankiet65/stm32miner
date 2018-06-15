@@ -21,11 +21,11 @@ uint8_t get_address() {
                    (~GPIO_PUPD_MASK(5)) & 
                    (~GPIO_PUPD_MASK(6)) & 
                    (~GPIO_PUPD_MASK(7));
-    GPIOA_PUPDR |= GPIO_PUPD(0, GPIO_PUPD_PULLDOWN) |
-                   GPIO_PUPD(1, GPIO_PUPD_PULLDOWN) |
-                   GPIO_PUPD(5, GPIO_PUPD_PULLDOWN) |
-                   GPIO_PUPD(6, GPIO_PUPD_PULLDOWN) |
-                   GPIO_PUPD(7, GPIO_PUPD_PULLDOWN);
+    GPIOA_PUPDR |= GPIO_PUPD(0, GPIO_PUPD_PULLUP) |
+                   GPIO_PUPD(1, GPIO_PUPD_PULLUP) |
+                   GPIO_PUPD(5, GPIO_PUPD_PULLUP) |
+                   GPIO_PUPD(6, GPIO_PUPD_PULLUP) |
+                   GPIO_PUPD(7, GPIO_PUPD_PULLUP);
 
     uint32_t gpioa = GPIOA_IDR;
     uint8_t address = (
