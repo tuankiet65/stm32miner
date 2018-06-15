@@ -14,7 +14,7 @@ stages:
 
 debug-build:
     stage: build
-    retry: 1
+    retry: 0
 
     script:
         - make lib
@@ -28,7 +28,7 @@ debug-build:
 
 production-build:
     stage: build
-    retry: 1
+    retry: 0
 
     script:
         - make lib
