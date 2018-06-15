@@ -61,7 +61,7 @@ void i2c_init_peripheral(uint8_t addr, uint8_t mhz) {
     //  - Analog filter (implied because bit = 0)
     //  - SCL stretching (implied because bit = 0)
     I2C_CR1(I2C1) = I2C_CR1_PE |
-                    I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_DDRIE | I2C_CR1_NACKIE | I2C_CR1_STOPIE;
+                    I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_ADDRIE | I2C_CR1_NACKIE | I2C_CR1_STOPIE;
 
     // Enable I2C1 interrupt
     NVIC_ISER(0) |= 1 << NVIC_I2C1_IRQ;
