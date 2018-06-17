@@ -36,14 +36,20 @@ uint32_t header[32];
 volatile uint8_t new_data;
 volatile uint32_t *nonce_ptr, last_nonce;
 volatile uint32_t calculated_hashrate;
+volatile uint8_t counter;
 
 void sys_tick_handler() {
     if (!nonce_ptr) return;
 
-    calculated_hashrate = (*nonce_ptr) - last_nonce;
-    last_nonce = (*nonce_ptr);
-    i2c_write(hashrate, &calculated_hashrate);
-    LOG("Hashrate: %d hash/s", calculated_hashrate);
+    if (counter == 20) {
+        calculated_hashrate = (*nonce_ptr) - last_nonce;
+        last_nonce = (*nonce_ptr);
+        i2c_write(hashrate, &calculated_hashrate);
+        LOG("Hashrate: %d hash/s", calculated_hashrate);
+        counter = 0;
+    }
+
+    counter++;
 
     led_toggle();
 }
@@ -55,7 +61,7 @@ void write_callback() {
 int main() {
     uint8_t clockrate = rcc_clock_setup_in_hsi_out_64mhz();
     log_init();
-    systick_init(clockrate, 1000);
+    systick_init(clockrate, 50);
     led_init();
 
     i2c_init(get_address(), clockrate, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
