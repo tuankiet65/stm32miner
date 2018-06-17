@@ -31,14 +31,14 @@
     #define GIT_VERSION "unknown"
 #endif
 
-uint32_t header[40];
+uint32_t header[32];
 
-volatile uint8_t new_data = 0, working = 0;
+volatile uint8_t new_data;
 volatile uint32_t *nonce_ptr, last_nonce;
 volatile uint32_t calculated_hashrate;
 
 void sys_tick_handler() {
-    if (working == 0) return;
+    if (!nonce_ptr) return;
 
     calculated_hashrate = (*nonce_ptr) - last_nonce;
     last_nonce = (*nonce_ptr);
@@ -94,14 +94,12 @@ int main() {
                 i2c_read(new_job_id, &job_id);
                 i2c_write(current_job_id, &job_id);
                 
-                nonce_ptr = NULL;
                 last_nonce = header[19];
 
                 i2c_write_uint8(state, STATE_WORKING);
                 i2c_dump();
             }
 
-            working = 1;
             uint32_t result;
             if (scanhash_sha256d(header, &result, &new_data, &nonce_ptr)) {
                 i2c_write_uint8(state, STATE_FOUND);
@@ -109,11 +107,12 @@ int main() {
             } else {
                 i2c_write_uint8(state, STATE_NOT_FOUND);
             }
-            working = 0;
 
             led_off();
         }
-    }
 
+        nonce_ptr = NULL;
+    }
+    
     return 0;
 }
