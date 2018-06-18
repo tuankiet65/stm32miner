@@ -76,7 +76,13 @@ void i2c_init_peripheral(uint8_t addr, uint8_t mhz) {
     //  - Analog filter (implied because bit = 0)
     //  - SCL stretching (implied because bit = 0)
     I2C_CR1(I2C1) = I2C_CR1_PE |
-                    I2C_CR1_TXIE | I2C_CR1_RXIE | I2C_CR1_ADDRIE | I2C_CR1_NACKIE | I2C_CR1_STOPIE;
+                    I2C_CR1_TXIE |
+                    I2C_CR1_RXIE |
+                    I2C_CR1_ADDRIE |
+    #ifdef DEBUG    
+                    I2C_CR1_NACKIE |
+    #endif
+                    I2C_CR1_STOPIE;
 
     // Enable I2C1 interrupt
     NVIC_ISER(0) |= 1 << NVIC_I2C1_IRQ;
@@ -163,11 +169,13 @@ void i2c1_isr() {
         return;
     }
     
-    if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(isr)) {
-        LOG("I2C: Slave received NACK (STOP should follow)");
-        i2c_clear_nack(I2C1);
-        return;
-    }
+    #ifdef DEBUG
+        if (i2c_state != I2C_ADDR_MATCH && i2c_interrupt_nack(isr)) {
+            LOG("I2C: Slave received NACK (STOP should follow)");
+            i2c_clear_nack(I2C1);
+            return;
+        }
+    #endif
     
     if (i2c_state == I2C_READ && i2c_interrupt_read_not_empty(isr)) {
         if (i2c_ptr == 0xffffffff) {
