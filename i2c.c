@@ -85,7 +85,7 @@ void i2c_init_peripheral(uint8_t addr, uint8_t mhz) {
                     I2C_CR1_STOPIE;
 
     // Enable I2C1 interrupt
-    NVIC_ISER(0) |= 1 << NVIC_I2C1_IRQ;
+    NVIC_ISER(NVIC_I2C1_IRQ / 32) |= 1 << NVIC_I2C1_IRQ;
 }
 
 void i2c_init_rw_map(const struct i2c_variable variables[], const uint8_t len) {
