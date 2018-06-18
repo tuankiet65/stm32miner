@@ -48,9 +48,8 @@ void sys_tick_handler() {
         LOG("Hashrate: %d hash/s", calculated_hashrate);
         counter = 0;
     }
-
     counter++;
-
+    
     led_toggle();
 }
 
@@ -58,20 +57,11 @@ void write_callback() {
     i2c_read(execute_job, &new_data);
 }
 
-#define NOP_DELAY(n) for (uint32_t i = 0; i <= n; ++i) __asm__("nop");
-
-void startup_led() {
-    led_on();
-    NOP_DELAY(500000);
-    led_off();
-}
-
 int main() {
     uint8_t clockrate = rcc_clock_setup_in_hsi_out_64mhz();
     log_init();
     systick_init(clockrate, 50);
     led_init();
-    startup_led();
 
     i2c_init(get_address(), clockrate, i2c_variables, sizeof(i2c_variables) / sizeof(struct i2c_variable));
     i2c_register_write_callback(write_callback);
@@ -82,51 +72,51 @@ int main() {
     LOG("Ready, waiting for job");
 
     while (1) {
+        led_on();
+        nonce_ptr = NULL;
+
+        if (!new_data) continue;
+        
         // Critical section because I2C is interrupt-driven
         // Thus, to access I2C data it's necessary to disable
         // interrupt, or race condition will happen
-        if (new_data) {
-            CM_ATOMIC_BLOCK() {
-                i2c_write_uint8(execute_job, 0);
-                i2c_write_uint8(current_job_id, 0);
-                i2c_write_uint32(hashrate, 0);
-                i2c_write_uint32(winning_nonce, 0);
 
-                LOG("New job");
-                new_data = 0;
+        CM_ATOMIC_BLOCK() {
+            i2c_write_uint8(execute_job, 0);
+            i2c_write_uint8(current_job_id, 0);
+            i2c_write_uint32(hashrate, 0);
+            i2c_write_uint32(winning_nonce, 0);
 
-                i2c_read(new_header, header);
-                // SHA-256 padding
-                // Its actual content is {
-                //    0x80000000, 0x00000000, 0x00000000, 0x00000000,
-                //    0x00000000, 0x00000000, 0x00000000, 0x00000000,
-                //    0x00000000, 0x00000000, 0x00000000, 0x00000280 
-                // } but we're short on program space
-                header[20] = 0x80000000;
-                header[31] = 0x00000280;
+            LOG("New job");
+            new_data = 0;
 
-                uint8_t job_id = 0;
-                i2c_read(new_job_id, &job_id);
-                i2c_write(current_job_id, &job_id);
-                
-                last_nonce = header[19];
+            i2c_read(new_header, header);
+            // SHA-256 padding
+            // Its actual content is {
+            //    0x80000000, 0x00000000, 0x00000000, 0x00000000,
+            //    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+            //    0x00000000, 0x00000000, 0x00000000, 0x00000280 
+            // } but we're short on program space
+            header[20] = 0x80000000;
+            header[31] = 0x00000280;
 
-                i2c_write_uint8(state, STATE_WORKING);
-                i2c_dump();
-            }
+            uint8_t job_id = 0;
+            i2c_read(new_job_id, &job_id);
+            i2c_write(current_job_id, &job_id);
+            
+            last_nonce = header[19];
 
-            uint32_t result;
-            if (scanhash_sha256d(header, &result, &new_data, &nonce_ptr)) {
-                i2c_write_uint8(state, STATE_FOUND);
-                i2c_write(winning_nonce, &result);
-            } else {
-                i2c_write_uint8(state, STATE_NOT_FOUND);
-            }
-
-            led_off();
+            i2c_write_uint8(state, STATE_WORKING);
+            i2c_dump();
         }
 
-        nonce_ptr = NULL;
+        uint32_t result;
+        if (scanhash_sha256d(header, &result, &new_data, &nonce_ptr)) {
+            i2c_write_uint8(state, STATE_FOUND);
+            i2c_write(winning_nonce, &result);
+        } else {
+            i2c_write_uint8(state, STATE_NOT_FOUND);
+        }
     }
     
     return 0;
