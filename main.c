@@ -13,9 +13,6 @@
  *  GNU General Public License for more details.
  */
 
-#include <stdio.h>
-#include <string.h>
-
 #include <libopencm3/cm3/cortex.h>
 
 #include "i2c.h"
