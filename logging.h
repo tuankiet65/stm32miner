@@ -15,15 +15,14 @@
 
 #ifndef LOGGING_H
 	#define LOGGING_H
-	
+
+	#include <stdio.h>
 	#include <stdarg.h>
 	#include <string.h>
-	
+
 	#include <libopencm3/stm32/rcc.h>
 	#include <libopencm3/stm32/gpio.h>
 	#include <libopencm3/stm32/usart.h>
-
-	#include "mini_printf.h"
 
 	#ifdef DEBUG
 		void log_init();

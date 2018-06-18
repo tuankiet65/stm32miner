@@ -47,7 +47,7 @@ void LOG(const char fmt[], ...) {
 
 	va_list args;
 	va_start(args, fmt);
-	len = mini_vsnprintf(log_str, sizeof(log_str), fmt, args);
+	len = vsnprintf(log_str, sizeof(log_str), fmt, args);
 	va_end(args);
 
 	for (int i = 0; i < len; ++i) {
