@@ -26,7 +26,6 @@
         new_job_id,
         new_header,
         execute_job,
-        force_calibrate
     };
 
     #define STATE_READY 0x01
@@ -45,7 +44,6 @@
         { .id = new_job_id     , .size = sizeof(uint8_t)     , .rw = I2C_RW },
         { .id = new_header     , .size = sizeof(uint32_t[20]), .rw = I2C_RW },
         { .id = execute_job    , .size = sizeof(uint8_t)     , .rw = I2C_RW },
-        { .id = force_calibrate, .size = sizeof(uint8_t)     , .rw = I2C_RW },
     };
 
 #endif
