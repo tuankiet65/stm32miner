@@ -17,8 +17,8 @@
 
 uint8_t get_address() {
     // Bit config:
-    // PA7 PA6 PA5 PA4 PA1 PA0
-    // MSB     <----->     LSB
+    // 1 PA7 PA6 PA5 PA4 PA1 PA0
+    // MSB      <--->        LSB
     RCC_AHBENR |= RCC_AHBENR_GPIOAEN;
 
     GPIOA_MODER &= (~GPIO_MODE_MASK(0)) & 
@@ -50,7 +50,7 @@ uint8_t get_address() {
     uint8_t address = (
        ((gpioa & (GPIO7 | GPIO6 | GPIO5 | GPIO4)) >> 2) |
        ((gpioa & (                GPIO1 | GPIO0))     )
-    );
+    ) | (1 << 6);
 
     LOG("get_address: GPIOA is 0x%04x", gpioa);
     LOG("get_address: PA7 is %d", (gpioa & GPIO7) ? (1) : (0));
