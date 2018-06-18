@@ -39,6 +39,10 @@ void led_init() {
     // (heh, we're only going to turn it on or off every 1s)
     GPIO_OSPEEDR(PORT_LED) &= (~GPIO_OSPEED_MASK(pin_index));
     GPIO_OSPEEDR(PORT_LED) |= GPIO_OSPEED(pin_index, GPIO_OSPEED_100MHZ);
+
+    // Clear the pullup/pulldown as we don't want the output
+    // LED to be pulled up or down
+    GPIO_PUPDR(PORT_LED) &= (~GPIO_PUPD_MASK(pin_index));
 }
 
 void led_toggle() {
