@@ -55,5 +55,5 @@ void led_on() {
 }
 
 void led_off() {
-    GPIO_BSRR(PORT_LED) = PIN_LED << 16;
+    GPIO_BRR(PORT_LED) = PIN_LED;
 }
