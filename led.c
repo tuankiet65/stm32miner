@@ -29,7 +29,7 @@ void led_init() {
             break;
     };
 
-    uint8_t pin_index = __builtin_ctz(PIN_LED);
+    const uint8_t pin_index = __builtin_ctz(PIN_LED);
     
     // Set LED light pin to output
     GPIO_MODER(PORT_LED) &= (~GPIO_MODE_MASK(pin_index));
