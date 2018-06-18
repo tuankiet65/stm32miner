@@ -41,6 +41,7 @@ volatile uint8_t counter;
 void sys_tick_handler() {
     if (!nonce_ptr) return;
 
+    counter++;
     if (counter == 20) {
         calculated_hashrate = (*nonce_ptr) - last_nonce;
         last_nonce = (*nonce_ptr);
@@ -48,8 +49,7 @@ void sys_tick_handler() {
         LOG("Hashrate: %d hash/s", calculated_hashrate);
         counter = 0;
     }
-    counter++;
-    
+
     led_toggle();
 }
 
