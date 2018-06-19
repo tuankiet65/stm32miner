@@ -15,7 +15,7 @@
 
 #include "clock.h"
 
-uint8_t rcc_clock_setup_in_hsi_out_64mhz() {
+uint8_t rcc_init_hsi_pll_64() {
     /* Procedure: 
      *  - Enable and set HSI as system clock
      *  - Enable flash prefetch and set flash wait state to 1
