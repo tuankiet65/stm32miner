@@ -29,9 +29,9 @@
     #include "logging.h"
 
     enum i2c_states {
-        I2C_ADDR_MATCH,
-        I2C_READ,
-        I2C_WRITE
+        I2C_STATE_ADDR_MATCH,
+        I2C_STATE_READ,
+        I2C_STATE_WRITE
     };
 
     enum i2c_rw_status {
