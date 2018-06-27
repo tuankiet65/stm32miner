@@ -6,7 +6,7 @@ STM32Miner is a project for making a Bitcoin mining board consisted of microcont
 This is the source code of the firmware running on the worker MCUs.
 
 ## Why?
-I figured out this is the best way to learn how to develop firmwares on the STM32 line.
+I figure out this is the best way to get started with programming on the STM32 and ARM Cortex-M uC.
 
 ## Compatibility
 Currently, this firmware is only knows to work on the [STM32F030F4P6](http://www.st.com/en/microcontrollers/stm32f030f4.html).
@@ -55,25 +55,33 @@ All communication with the master is done using I2C:
 * PA9: SCL
 * PA10: SDA
 
-The firmware exposes itself as a xx byte register with the following structure:
+The firmware exposes itself as a register bank with the following structure:
 
-First address | Last address | type | Name | Purpose | RW/RO
---------------|--------------|------|------|--------|------
-0x00 | 0x00 | `uint8_t` | `new_job_id` | Job ID of the new job | RW
-0x01 | 0x50 | `uint32_t[20]` | `new_header` | Header of the new job | RW
-0x51 | 0x51 | `uint8_t` | `execute_job` | Write any non-zero value to start mining on the new job | RW
-0x52 | 0x52 | `uint8_t` | `force_calibration` | _(reserved)_ Write non-zero value to force the calibration of the High Speed Internal clock | RW
-0x53 | 0x?? | `char[8]` | `version` | Firmware's git commit | RO
-0x?? | 0x?? | `uint32_t` | `hashrate` | Current hashrate | RO
-0x?? | 0x?? | `uint8_t` | `current_job_id` | Job ID of the currently mining job | RO
-0x?? | 0x?? | `uint8_t` | `finished` | Non-zero if the current job | RO
-0x?? | 0x?? | `uint32_t` | `winning_nonce` | Winning nonce (aka the nonce that meets the requirement) | RO
+Address | Name | Size (in bytes) | Type | Description | RW/RO
+--------|------|-----------------|------|-------------|------
+0x00 | `version` | 8 | `char[8]` | Firmware's git commit | RO
+0x08 | `state` | 1 | `uint8_t` | Current state of the miner | RO
+0x09 | `hashrate` | 4 | `uint32_t` | Current hashrate | RO
+0x0d | `current_job_id` | 1 | `uint8_t` | Job ID of the current job` | RO
+0x0e | `winning_nonce` | 4 | `uint32_t` | Current hashrate | RO
+0x12 | `new_job_id` | 1 | `uint8_t` | New job ID | RW
+0x13 | `new_header` | 80 | `uint32_t[20]` | New block header | RW
+0x63 | `execute_job` | 1 | `uint8_t` | Write non-zero value to mine the new block header | RW
+
+`state` is defined as:
+```cpp
+#define STATE_READY 0x01
+#define STATE_WORKING 0x02
+#define STATE_FOUND 0x03
+#define STATE_NOT_FOUND 0x04
+#define STATE_ERROR 0xff
+```
 
 To initiate a mining job:
 * Write the job ID to `new_job_id`
 * Write the 80-byte header to `new_header`
-* Write any non-zero value to `execute_job`. The firmware will start mining the new job immediately. When it starts the `current_job_id` will change to the ID of the started job.
+* Write any non-zero value to `execute_job`. The firmware will start mining the new block header immediately. When it starts the `current_job_id` will change to the ID of the started job.
 
 To retrieve the result of a mining job:
-* Wait until `finished` contains non-zero value
-* Fetch the nonce in `winning_nonce`. This is the nonce that causes the block's SHA256d hash to contain at least 32 leading zeros (aka the hash's leading 4 bytes are zero)
+* Poll `finished` until it contains a non-zero value
+* Fetch the nonce in `winning_nonce`. This is the nonce that causes the block's SHA256d hash to contain at least 32 leading zeros (aka the leading 4 bytes are 0x00000000)
