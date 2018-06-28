@@ -55,7 +55,7 @@ void write_callback() {
 }
 
 int main() {
-    uint8_t clockrate = rcc_clock_setup_in_hsi_out_64mhz();
+    uint8_t clockrate = rcc_init_hsi_pll_64();
     log_init();
     systick_init(clockrate, 50);
     led_init();
@@ -96,7 +96,7 @@ int main() {
             // } but we're short on program space
             header[20] = 0x80000000;
             header[31] = 0x00000280;
-
+            
             uint8_t job_id = 0;
             i2c_read(new_job_id, &job_id);
             i2c_write(current_job_id, &job_id);
